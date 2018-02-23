@@ -7,17 +7,18 @@ import DataUtil.Online_Parameter_Calculation as OPC
 import CNN.Foveator
 import numpy as np
 import os
+import re
 
 import sys
 import threading
 
 filetype = 'png'
 
-def get_padded_image(img, img_k, img_j, img_i, img_feature_shape):
+def get_padded_image(img, img_k, img_j, img_i, feature_shape):
 
-    k_d = img_feature_shape[0] // 2
-    k_h = img_feature_shape[1] // 2
-    k_w = img_feature_shape[2] // 2
+    k_d = feature_shape[0] // 2
+    k_h = feature_shape[1] // 2
+    k_w = feature_shape[2] // 2
 
     img_d, img_h, img_w = img.shape
 
@@ -50,6 +51,13 @@ def get_padded_image(img, img_k, img_j, img_i, img_feature_shape):
     return padded_img_slice
 
 class ThreadStarterThread(threading.Thread):
+
+    #__slots__ = ('dataset_handle',
+    #             'batch_size',
+    #             'data_type',
+    #             'num_wanted_avail'
+    #             )
+
     def __init__(self, dataset_handle, batch_size):
 
         threading.Thread.__init__(self)
@@ -64,19 +72,13 @@ class ThreadStarterThread(threading.Thread):
 
         while True:
 
-            #print("TST0")
             self.dataset_handle.is_non_full.wait()
-            #print("TST1")
-            with self.dataset_handle.num_running_threads_lock:
-                #print("TST2")
-                num_spawns = self.num_wanted_avail - self.dataset_handle.num_running_threads
-                #print("TST3")
-                self.dataset_handle.is_non_full.clear()
-                #print("TST4")
-                self.dataset_handle.num_running_threads = self.num_wanted_avail
-                #print("TST5")
 
-            #print("TST6")
+            with self.dataset_handle.num_running_threads_lock:
+
+                num_spawns = self.num_wanted_avail - self.dataset_handle.num_running_threads
+                self.dataset_handle.is_non_full.clear()
+                self.dataset_handle.num_running_threads = self.num_wanted_avail
 
             for i in range(num_spawns):
                 self.dataset_handle._spawn_new_data_fetch_thread(self.data_type)
@@ -85,17 +87,23 @@ class ThreadStarterThread(threading.Thread):
                 thread = self.dataset_handle.joinable_threads.pop()
                 thread.join()
 
-
-
 class SingleImageFetcherThread(threading.Thread):
     '''Thread class for asynchronously fetching data from the disk
     '''
-    def __init__(self, handle, img_idx, dict_key, image_entry_index, bounds):
+
+    #__slots__ = ('handle',
+    #             'image_path',
+    #             'dict_key',
+    #             'image_entry_index',
+    #             'bounds',
+    #             )
+
+    def __init__(self, handle, image_path, dict_key, image_entry_index, bounds):
 
         threading.Thread.__init__(self)
 
         self.handle = handle
-        self.img_idx = img_idx
+        self.image_path = image_path
         self.dict_key = dict_key
         self.image_entry_index = image_entry_index
         self.bounds = bounds
@@ -115,12 +123,17 @@ class SingleImageFetcherThread(threading.Thread):
 
         with self.handle.image_list_lock:
             self.handle.image_query_result_dict[self.dict_key][0][self.image_entry_index] = img
-            self.handle.image_query_result_dict[self.dict_key][2] -= 1
+            self.handle.image_query_result_dict[self.dict_key][1] -= 1
             self.handle.joinable_threads.append(self)
 
 class SingleFeatureClassFetcherThread(threading.Thread):
     '''Thread class for asynchronously fetching data from the data class classes
     '''
+
+    #__slots__ = ('dataset_handle',
+    #             'class_handle',
+    #             )
+
     def __init__(self, dataset_handle, class_handle):
 
         threading.Thread.__init__(self)
@@ -141,50 +154,46 @@ class SingleFeatureClassFetcherThread(threading.Thread):
 
         self.dataset_handle.joinable_threads.append(self)
 
-class FeatureClassImageQuery():
+class FeatureClassImageQuery(object):
     '''Class controls the reading of features for one feature class
     The class attempts to keep multiple images available using a dictionary of
     the images
     '''
 
+    #__slots__ = ('segmentations',
+    #             'one_hot_encoding',
+    #             'class_map',
+    #             'feature_shape',
+    #             'number_of_live_images',
+    #             'new_image_probability',
+    #             'image_list_lock',
+    #             'get_data_lock',
+    #             'image_point_indices_pair_list',
+    #             'image_query_result_dict',
+    #             'cur_dict_key',
+    #             'number_images_begin_fetched',
+    #             'next_seg_idx',
+    #             'joinable_threads',
+    #             )
+
     def __init__(self,
-                 image_path,
-                 segmentation_path,
-                 image_indices,
-                 bounds,
-                 train_img_indices,
-                 one_hot_idx,
-                 n_classes,
+                 segmentations,
+                 one_hot_encoding,
                  class_map,
-                 img_z_bounds,
-                 img_feature_shape,
-                 normalization_parameters,
+                 feature_shape,
                  number_of_live_images,
-                 post_processing,
                  new_image_probability):
 
-        ##  Set static class variables  ########################################
+        ##  Set static class variables  #######################################
 
-        self.image_path = image_path
-        self.segmentation_path = segmentation_path
-        self.image_indices = image_indices
-        self.bounds = bounds
-        self.train_img_indices = train_img_indices
-        self.one_hot_idx = one_hot_idx
-        self.n_classes = n_classes
+        self.segmentations = segmentations
+        self.one_hot_encoding = one_hot_encoding
         self.class_map = class_map
-        self.img_z_bounds = img_z_bounds
-        self.img_feature_shape = img_feature_shape
-        self.normalization_parameters = normalization_parameters
+        self.feature_shape = feature_shape
         self.number_of_live_images = number_of_live_images
-        self.post_processing = post_processing
         self.new_image_probability = new_image_probability
 
-        assert img_feature_shape[0] % 2 == 1
-        assert img_feature_shape[1] % 2 == 1
-        assert img_feature_shape[2] % 2 == 1
-
-        ##  Variables for asynchronous data fetching  ##########################
+        ##  Variables for asynchronous data fetching  #########################
         # Warning: Use the lock for these!
 
         self.image_list_lock = threading.Lock()
@@ -194,62 +203,50 @@ class FeatureClassImageQuery():
         self.cur_dict_key = 0
         self.number_images_begin_fetched = 0
 
-        self.next_img_idx = randint(0, len(self.image_indices))
+        self.next_seg_idx = randint(0, len(self.segmentations) - 1)
         self.joinable_threads = []
 
-        ##  Grab first image  ##################################################
-        tmp_path = image_path + '_' + str(self.train_img_indices[0]) + '.' + filetype
-        tmp_img = np.array(Image.open(tmp_path))
-
-        tmp_img = tmp_img[self.bounds[0]:self.bounds[1], self.bounds[2]:self.bounds[3]]
-
-        self.img_d = img_z_bounds[1]
-        self.img_h = tmp_img.shape[0]
-        self.img_w = tmp_img.shape[1]
-
+        ##  Grab first image  #################################################
         self._grab_new_image()
 
     def get_number_of_remaining_available_batches(self):
         with self.image_list_lock:
-            number_of_remaining_avilable_batches = reduce(add, [len(pair[1]) for pair in self.image_point_indices_pair_list], 0)
+            avail_batches = [len(pair[1]) for pair in self.image_point_indices_pair_list]
+            number_of_remaining_avilable_batches = reduce(add,
+                                                          avail_batches,
+                                                          0)
         return number_of_remaining_avilable_batches
 
-    def _get_next_img_idx(self):
-        self.next_img_idx = (self.next_img_idx + 1) % len(self.image_indices)
-        return self.image_indices[self.next_img_idx]
+    def _get_next_segmentation(self):
+        self.next_seg_idx = (self.next_seg_idx + 1) % len(self.segmentations)
+        return self.segmentations[self.next_seg_idx]
 
     def _grab_new_image(self):
         '''Spawn new thread for grabbing the next image
         '''
-        img_k = self._get_next_img_idx()
-        k_d = self.img_feature_shape[0]
+        sparseSegmentations = self._get_next_segmentation()
 
-        new_image_list = [None for i in range(k_d)]
+        image_paths = sparseSegmentations.image_paths
 
-        # find the bounds of the image we want to fetch
-        k_back = img_k - k_d // 2
-        k_front = img_k + k_d // 2
-
-        threads = []
+        images_to_load = len(image_paths)
 
         cur_dict_key = self.cur_dict_key
-        new_thread_result_entry = [[None for i in range(k_d)], img_k, k_d]
-        self.image_query_result_dict[cur_dict_key] = new_thread_result_entry
         self.cur_dict_key += 1
+
+        new_thread_result_entry = ([None for i in range(images_to_load)],
+                                   images_to_load)
+
+        self.image_query_result_dict[cur_dict_key] = new_thread_result_entry
+
         self.number_images_begin_fetched += 1
 
-        image_entry_index = 0
+        for image_entry_index, image_path in enumerate(image_paths):
 
-        for img_idx in range(k_back, k_front + 1):
-            while img_idx < 0 or img_idx >= self.img_d:
-                if img_idx < 0:
-                    img_idx = - img_idx
-                if img_idx >= self.img_d:
-                    img_idx = 2*self.img_d - img_idx - 1
-
-            threads.append(SingleImageFetcherThread(self, img_idx, cur_dict_key, image_entry_index, self.bounds))
-            threads[-1].start()
-            image_entry_index += 1
+            thread = SingleImageFetcherThread(self,
+                                              image_path,
+                                              cur_dict_key,
+                                              image_entry_index,
+                                              img_bounds).start()
 
     def _get_completed_queries(self):
 
@@ -262,7 +259,7 @@ class FeatureClassImageQuery():
             for key in self.image_query_result_dict:
 
                 # Check if it is done
-                if self.image_query_result_dict[key][2] == 0:
+                if self.image_query_result_dict[key][1] == 0:
 
                     query_results.append(self.image_query_result_dict[key])
                     keys_to_delete.append(key)
@@ -312,10 +309,8 @@ class FeatureClassImageQuery():
 
         # While running until data is available
 
-        x = np.empty(self.img_feature_shape, dtype = np.float32)
-        y = np.zeros((1, self.n_classes), dtype = np.uint8)
-
-        y[0, self.one_hot_idx] = 1
+        x = np.empty(self.feature_shape, dtype = np.float32)
+        y = np.copy(self.one_hot_encoding)
 
         data_fetch_success = False
 
@@ -336,10 +331,10 @@ class FeatureClassImageQuery():
                         img = self.image_point_indices_pair_list[0][0]
 
                         x[:] = get_padded_image(img,
-                                                self.img_feature_shape[0] // 2,
+                                                self.feature_shape[0] // 2,
                                                 x_j,
                                                 x_i,
-                                                self.img_feature_shape)
+                                                self.feature_shape)
 
                         data_fetch_success = True
 
@@ -374,7 +369,8 @@ class FibsemDataset():
                  dataset_dir,
                  batch_size,
                  feature_shape,
-                 img_class_map):
+                 img_class_map,
+                 **kwargs):
 
         '''Fibsem Dataset class
 
@@ -390,9 +386,9 @@ class FibsemDataset():
                 zero, and label 1 and 2 in the segmentation images is encoded
                 as 1.
         # Keyword arguments
-            image_path: Overwrites the standard image path wrt. dataset_dir
-            test_path: Overwrites the standard test path wrt. dataset_dir
-            train_path: Overwrites the standard train path wrt. dataset_dir
+            image_dir: Overwrites the standard image path wrt. dataset_dir
+            test_dir: Overwrites the standard test path wrt. dataset_dir
+            train_dir: Overwrites the standard train path wrt. dataset_dir
             post_processing_path: Overwrites the standard pp_train path wrt.
                 dataset_dir
             new_image_probability: Probability that the training image is
@@ -403,7 +399,6 @@ class FibsemDataset():
 
         self.dataset_dir = dataset_dir
 
-        self.train_img_indices = self._image_nums_in_dir(self.train_path)
         self.number_of_classes = len(img_class_map)
 
         self.batch_size = batch_size
@@ -428,33 +423,27 @@ class FibsemDataset():
                           'post_processing_dir',
                           'new_image_probability',
                           'number_of_available_batches',
+                          'norm_params',
                           }
 
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
                 raise TypeError('Keyword argument not understood:', kwarg)
 
+        '''
+        The following sets the class variables
+
+        self._image_dir, self._image_paths, self._image_indices
+        self._train_dir, self._train_paths, self._train_indices
+        self._test_dir, self._test_paths, self._test_indices
+        self._post_processing_dir, self._post_processing_paths, self._post_processing_indices
+        '''
+
         data_names = ['image',
                       'train',
                       'test',
-                      'post_processing']
-
-        '''
-        The following sets class variables
-
-        self._image_dir
-        self._image_paths
-        self._image_indices
-        self._train_dir
-        self._train_paths
-        self._train_indices
-        self._test_dir
-        self._test_paths
-        self._test_indices
-        self._post_processing_dir
-        self._post_processing_paths
-        self._post_processing_indices
-        '''
+                      'post_processing',
+                      ]
 
         for data_name in data_names:
 
@@ -465,61 +454,47 @@ class FibsemDataset():
             else:
                 self.__dict__['_' + data_dir_path] = dataset_dir + os.sep + data_name
 
-            paths, indices = self._image_nums_in_dir(self, image_dir)
+            paths, indices = self._get_data_parameters(image_dir)
 
-            self.__dict__['_' + data_name + '_paths'] = image_paths
-            self.__dict__['_' + data_name + '_indices'] = image_indices
-
-        if 'train_dir' in kwargs:
-            self.train_dir = kwargs['train_dir']
-        else:
-            self.train_dir           = dataset_dir + os.sep + 'train'
-
-        train_paths, train_indices = self._image_nums_in_dir(self, train_dir)
-
-        self.train_paths = train_paths
-        self.train_indices = train_indices
-
-        if 'test_dir' in kwargs:
-            self.test_dir = kwargs['test_dir']
-        else:
-            self.test_dir            = dataset_dir + os.sep + 'test'
-
-        train_paths, train_indices = self._image_nums_in_dir(self, train_dir)
-
-        self.train_paths = train_paths
-        self.train_indices = train_indices
-
-        if 'post_processing_dir' in kwargs:
-            self.post_processing_dir = kwargs['post_processing_dir']
-        else:
-            self.post_processing_dir = dataset_dir + os.sep + 'pp_train'
-
-
+            self.__dict__['_' + data_name + '_paths'] = paths
+            self.__dict__['_' + data_name + '_indices'] = indices
 
 
 
         if 'new_image_probability' in kwargs:
+
             self.new_image_probability = kwargs['new_image_probability']
+
             if self.new_image_probability < 0 or self.new_image_probability > 1:
                 raise ValueError('new_image_probability must be in the range [0.0,1.0]')
+
         else:
+
             self.new_image_probability = 0.0
 
         if 'number_of_available_batches' in kwargs:
+
             self.number_of_available_batches = kwargs['number_of_available_batches']
+
+            if not isinstance(self.number_of_available_batches, int):
+                raise TypeError('number_of_available_batches must be of type integer')
+
         else:
+
             self.number_of_available_batches = 4
 
+        if 'norm_params' in kwargs:
 
+            self.mean, self.std = kwargs['norm_params']
 
+        else:
 
-        self.mean = None
-        self.std  = None
+            self.mean, self.std = self._calculate_normalization_params()
 
         self.feature_classes = []
 
-        image_indices, bounds = self._get_image_indices_with_class_list()
+        segmentations, bounds = self._get_image_indices_with_class_list()
+        number_of_live_images = 1
 
         for class_idx in range(number_of_classes):
 
@@ -531,19 +506,14 @@ class FibsemDataset():
             if img_class_map != None:
                 class_map = img_class_map[class_idx]
 
-            newFeatureClass = FeatureClassImageQuery(self.image_path,
-                                                     self.train_path,
-                                                     image_indices[class_idx],
-                                                     bounds,
-                                                     train_img_indices,
-                                                     class_idx,
-                                                     number_of_classes,
+            one_hot_encoding = np.zeros((1, self.n_classes), dtype = np.uint8)
+            one_hot_encoding[0, self.one_hot_idx] = 1
+
+            newFeatureClass = FeatureClassImageQuery(segmentations[class_idx],
+                                                     one_hot_encoding,
                                                      class_map,
-                                                     img_z_bounds,
                                                      feature_shape,
-                                                     (self.mean, 1./self.std),
-                                                     1,
-                                                     self.foveator.process,
+                                                     number_of_live_images,
                                                      self.new_image_probability)
 
             self.feature_classes.append(newFeatureClass)
@@ -569,19 +539,71 @@ class FibsemDataset():
     def get_number_of_remaining_available_batches(self):
         return [feature_class.get_number_of_remaining_available_batches() for feature_class in self.feature_classes]
 
-    def _get_data_configuration(self, path):
+    def _calculate_normalization_params(self):
+
+        opc = OPC.Online_Parameter_Calculation()
+
+        for image_path in tqdm(self._image_paths,
+                               ascii = True,
+                               desc = 'Calculating normalization parameters'):
+
+            image = np.array(Image.open(path))
+            opc.add_next_set(image, lambda x: x != 0)
+
+        print('Calculated mean and std of dataset to:',
+              '\nMean:',opc.get_mean(),
+              '\nStd:' ,opc.get_std())
+
+        return opc.get_mean(), opc.get_std()
+
+    def _get_data_parameters(self, path):
 
         directory = os.fsencode(directory_in_str)
 
+        found_filetypes = {'.png':0,
+                           '.tif':0,
+                           '.bmp':0,
+                           '.jpg':0,
+                           }
+
+        filenames = []
+        file_indices = []
+
         for file in os.listdir(directory):
-            filename = os.fsdecode(file)
-            if filename.endswith(".asm") or filename.endswith(".py"):
-                # print(os.path.join(directory, filename))
-                continue
-            else:
+
+            fname = os.fsdecode(file)
+            current_ftype = None
+
+            for ftype in found_filetypes.keys():
+
+                if fname.endswith(ftype):
+
+                    current_ftype = ftype
+                    found_filetypes[ftype] += 1
+                    break
+
+            if not current_ftype:
                 continue
 
-        return name, numbers
+            fname_no_ext = fname[:-4]
+
+            match = re.search(r'\d+$', fname_no_ext)
+
+            if match:
+                file_index = int(match.group())
+
+                if file_index in file_indices:
+                    raise ValueError('Index ' + \
+                                     str(file_index) + \
+                                     'found multiple times in: ' + \
+                                     directory)
+
+                file_indices.append(file_index)
+                filenames.append(fname)
+
+        file_indices, filenames = zip(*sorted(zip(file_indices, filenames)))
+
+        return filenames, file_indices
 
 
     def _get_image_indices_with_class_list(self):
@@ -589,70 +611,49 @@ class FibsemDataset():
         has been segmented
         '''
 
-        indices = [[] for i in range(self.number_of_classes)]
+        sparseSegmentations = [[] for i in range(self.number_of_classes)]
 
-        i_max = 0
-        i_min = None
-        j_max = 0
-        j_min = None
+        i_max = j_max = 0
+        i_min = j_min = math.inf
 
-        opc = OPC.Online_Parameter_Calculation()
+        for  img_idx, path in tqdm(zip(self._test_indices, self._test_paths),
+                                   ascii = True,
+                                   desc = 'Indexing images'):
 
-        img_shape = None
-
-        img_h = None
-        img_w = None
-
-        for img_idx in tqdm(self.train_img_indices,
-                            ascii = True,
-                            desc = 'Indexing images'):
-
-            path_seg = self.train_path + '_' + str(img_idx) + '.' + filetype
-            path = self.image_path + '_' + str(img_idx) + '.' + filetype
-
-            #try:
             img = np.array(Image.open(path))
             img_h, img_w = img.shape
-            #except FileNotFoundError:
-            #    pass
 
-            #try:
-            img_seg = np.array(Image.open(path_seg))
-            #except FileNotFoundError:
-            #    continue
-
-            opc.add_next_set(img, lambda x: x != 0)
-
-            if img_idx == self.train_img_indices[0]:
-                img_shape = img.shape
-                i_min = img_shape[1]
-                j_min = img_shape[0]
-
-            j, i = np.where(img_seg != 255)
+            j, i = np.where(img != 255)
 
             i_max = max(i_max, np.max(i))
             i_min = min(i_min, np.min(i))
             j_max = max(j_max, np.max(j))
             j_min = min(j_min, np.min(j))
 
+            sparse_img_seg = SparseImageSegmentation(img_idx,
+                                                     path,
+                                                     self._image_indices,
+                                                     self._image_paths,
+                                                     self.feature_shape)
+
             for class_idx in range(self.number_of_classes):
+
                 for class_map_value in self.img_class_map[class_idx]:
-                    if class_map_value in img_seg:
-                        indices[class_idx].append(img_idx)
+
+                    if class_map_value in img:
+
+                        sparseSegmentations[class_idx].append(img_idx)
                         break
 
-        for i in range(len(indices)):
-            shuffle(indices[i])
-
-        self.mean = opc.get_mean()
-        self.std = opc.get_std()
+        for i in range(len(sparseSegmentations)):
+            shuffle(sparseSegmentations[i])
 
         bounds = (max(j_min - self.feature_shape[1] // 2, 0),
                   min(j_max + self.feature_shape[1] // 2 + 1, img_h),
                   max(i_min - self.feature_shape[2] // 2, 0),
                   min(i_max + self.feature_shape[2] // 2 + 1, img_w))
 
-        return indices, bounds
+        return sparseSegmentations, bounds
 
     def _spawn_new_data_fetch_thread(self, data_type):
 
@@ -721,9 +722,68 @@ class FibsemDataset():
         for k in [pad_k+img.shape[0]//2]:
             for j in range(pad_j, h+pad_j):
                 for i in range(pad_i, w+pad_i):
-                    #x = get_padded_image(img, k, j, i, self.feature_shape)
-                    #x = self.foveator.process(x)
 
                     x = img[k-pad_k:k+pad_k+1, j-pad_j:j+pad_j+1, i-pad_i:i+pad_i+1]
 
                     yield x, k-pad_k, j-pad_j, i-pad_i
+
+class SparseImageSegmentation(object):
+
+    #__slots__ = ('_segmentation_index',
+    #             '_segmentation_path',
+    #             '_image_indices',
+    #             '_image_paths',
+    #             '_bounds',
+    #             )
+
+    def __init__(self,
+                 segmentation_index,
+                 segmentation_path,
+                 image_indices,
+                 image_paths,
+                 feature_shape,
+                 bounds):
+
+        kw = feature_shape[0] // 2
+
+        self._segmentation_index = segmentation_index
+        self._segmentation_path = segmentation_path
+
+        self._image_indices = []
+        self._image_paths = []
+
+        local_seg_idx = segmentation_index - min(image_indices)
+        local_max_idx = len(image_indices)
+
+        for img_idx in range(local_seg_idx - kw, local_seg_idx + kw + 1):
+
+            if img_idx < 0 or img_idx >= local_max_idx:
+                if img_idx < 0:
+                    img_idx = - img_idx
+                if img_idx >= local_max_idx:
+                    img_idx = 2*local_max_idx - img_idx - 1
+
+            self._image_indices.append(img_idx + min(image_indices))
+            self._image_paths.append(image_paths[img_idx])
+
+        self._bounds = bounds
+
+    @property
+    def image_indices(self):
+        return self._image_indices
+
+    @property
+    def segmentation_index(self):
+        return self._segmentation_index
+
+    @property
+    def image_paths(self):
+        return self._image_paths
+
+    @property
+    def segmentation_path(self):
+        return self._segmentation_path
+
+    @property
+    def bounds(self):
+        return self._bounds
