@@ -8,7 +8,7 @@ import keras.backend as K
 
 def train_model(dataset,
                 stored_model,
-                summary=True,
+                batch_size,
                 **kwargs,
                 ):
 
@@ -17,19 +17,15 @@ def train_model(dataset,
     #   SET CONSTANTS  ---------------------------------------------------------- #
     # --------------------------------------------------------------------------- #
 
-    batch_size = 32
-
     number_of_examples_per_epoch = 482000
     number_of_epochs = (30 * 3000000) // number_of_examples_per_epoch
-
-    initial_learning_rate = 0.001
-    learning_rate_decay = 1e-6
 
     test_path = None
 
     num_classes = len(img_class_map)
 
     model_name = stored_model.name
+    model = stored_model.model
 
     # --------------------------------------------------------------------------- #
     #   ITERATION VARIABLES  ---------------------------------------------------- #
@@ -43,13 +39,6 @@ def train_model(dataset,
     #   DEFINE MODEL  ----------------------------------------------------------- #
     # --------------------------------------------------------------------------- #
 
-    # init optimizer
-
-    if summary:
-        model.summary()
-
-        for layer in model.layers:
-            print(layer.get_output_at(0).get_shape().as_list())
 
     custom_objects={'RotationLayer':RotationLayer, 'FoveationLayer':FoveationLayer}
 
@@ -72,7 +61,7 @@ def train_model(dataset,
                                     data_augmentation,
                                     img_class_map)
 
-    for epoch in range(48, number_of_epochs):
+    for epoch in range(start_epoch, number_of_epochs):
 
         # Train the network for this epoch
 

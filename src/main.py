@@ -7,7 +7,6 @@ from ModelConfigs import ModelConfigs
 
 import CNN.FibsemDataset as input_data
 
-
 if __name__ '__main__':
     dataset_path = '../data/lausanne'
     #dataset_path = '/scratch/xkv467/lausanne'
@@ -20,4 +19,5 @@ if __name__ '__main__':
                             feature_shape,
                             img_class_map,
                             )
+
     train_model(dataset_id, model)
