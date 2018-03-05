@@ -1,125 +1,86 @@
-from keras.layers import Activation, Conv3D, Dense, Dropout, Flatten, MaxPooling3D
-from keras.models import Sequential
-from keras.preprocessing.image import ImageDataGenerator
-from CNN.FoveationLayer import FoveationLayer
-from CNN.RotationLayer import RotationLayer
-import keras
-import keras.backend as K
+from test import test_model
+from tqdm import tqdm
+import numpy as np
 
 def train_model(dataset,
                 stored_model,
                 batch_size,
+                iterations_per_epoch=20000,
+                max_epochs=5,
                 **kwargs,
                 ):
 
+    allowed_kwargs = {'avg_grad_n'
+                      'avg_grad_stop',
+                      }
 
-    # --------------------------------------------------------------------------- #
-    #   SET CONSTANTS  ---------------------------------------------------------- #
-    # --------------------------------------------------------------------------- #
+    for kwarg in kwargs:
+        if kwarg not in allowed_kwargs:
+            raise TypeError('Keyword argument not understood:', kwarg)
 
-    number_of_examples_per_epoch = 482000
-    number_of_epochs = (30 * 3000000) // number_of_examples_per_epoch
+    avg_grad_n = 5
+    if 'avg_grad_n' in kwargs:
+        avg_grad_n = kwargs['avg_grad_n']
 
-    test_path = None
-
-    num_classes = len(img_class_map)
+    avg_grad_stop = False
+    if 'avg_grad_stop' in kwargs:
+        avg_grad_stop = kwargs['avg_grad_stop']
 
     model_name = stored_model.name
     model = stored_model.model
+    start_epoch = stored_model.next_epoch
+    session = stored_model.session
+    d, h, w = stored_model.input_shape
 
-    # --------------------------------------------------------------------------- #
-    #   ITERATION VARIABLES  ---------------------------------------------------- #
-    # --------------------------------------------------------------------------- #
+    all_test_accs = []
 
-    steps = []
-    losses = []
-    accuracies = []
+    pbar = tqdm(range(start_epoch, max_epochs),
+                desc='Epoch: {:d}'.format(start_epoch))
 
-    # --------------------------------------------------------------------------- #
-    #   DEFINE MODEL  ----------------------------------------------------------- #
-    # --------------------------------------------------------------------------- #
-
-
-    custom_objects={'RotationLayer':RotationLayer, 'FoveationLayer':FoveationLayer}
-
-    if load_model:
-        model_path = os.path.join(save_dir, load_model_name)
-        model = keras.models.load_model(model_path, custom_objects=custom_objects)
-
-    # --------------------------------------------------------------------------- #
-    #   LOAD DATASET  ----------------------------------------------------------- #
-    # --------------------------------------------------------------------------- #
-
-    data = input_data.FibsemDataset(image_path,
-                                    image_bounds,
-                                    segmentation_path,
-                                    number_of_slices,
-                                    num_classes,
-                                    output_feature_shape,
-                                    batch_size,
-                                    test_path,
-                                    data_augmentation,
-                                    img_class_map)
-
-    for epoch in range(start_epoch, number_of_epochs):
-
+    for epoch in pbar:
         # Train the network for this epoch
 
-        epoch_accuracies = []
-        epoch_losses = []
+        train_accs = []
+        losses = []
 
         fetch_time = 0
         train_time = 0
 
-        for step in range(int(number_of_examples_per_epoch / batch_size)):
+        for step in tqdm(range(int(iterations_per_epoch / batch_size))):
 
-            t = time.time()
-            x_batch, y_batch = data.next_batch(batch_size)
-            t = time.time() - t
-            fetch_time += t
+            x_batch, y_batch = dataset.next_batch()
+            x_batch = x_batch.reshape((batch_size, d, h, w, 1))
 
-            x_batch = x_batch.reshape((batch_size, 45, 45, 45, 1))
-            y = np.argmax(y_batch, 1)
-
-            t = time.time()
             scores = model.train_on_batch(x_batch, y_batch)
-            t = time.time() - t
-            train_time += t
-
-            epoch_losses.append(scores[0])
-            epoch_accuracies.append(scores[1])
+            losses.append(scores[0])
+            train_accs.append(scores[1])
 
         # Summarize epoch results
 
-        standard_error = np.std(epoch_accuracies)/np.sqrt(len(epoch_accuracies))
+        train_acc = np.mean(train_accs)
 
-        epoch_mean_loss = np.mean(epoch_losses)
-        epoch_mean_acc = np.mean(epoch_accuracies)
+        test_acc = test_model(dataset, model)
+        all_test_accs.append(test_acc)
 
-        print('Epoch', epoch,
-              'Ep loss:', epoch_mean_loss,
-              'Mean Ep acc:', epoch_mean_acc,
-              '+/- std_err:', standard_error,
-              'time:', time.strftime("%H:%M:%S"),
-              'fetch time:', fetch_time,
-              'train time:', train_time)
+        last_n_test = all_test_accs[-avg_grad_n:]
+        N = len(last_n_test)
 
-        steps.append(epoch)
-        losses.append(epoch_mean_loss)
-        accuracies.append(epoch_mean_acc)
+        if len(last_n_test) == 1:
+            acc_change = 0
+        else:
+            changes = [last_n_test[i] - last_n_test[i-1] for i in range(1,N)]
+            acc_change = np.mean(changes)
 
-        epoch_model_name = 'reg_fovea_two_layer_model_2_'+str(epoch)+'.h5'
-        model_path = os.path.join(save_dir, epoch_model_name)
-        model.save(model_path)
+        desc =  'Epoch {:d} '.format(epoch)
+        desc += 'acc ({:04.2f}, {:04.2f}) '.format(train_acc, test_acc)
+        desc += '(test change(5): {:04.2f})'.format(acc_change)
 
-    # Save model and weights
-    model_path = os.path.join(save_dir, model_name)
-    model.save(model_path)
-    print('Saved trained model at %s ' % model_path)
+        stored_model.save_model(model, train_acc, test_acc, epoch, session)
 
-    print('Steps:', steps)
-    print('Losses:', losses)
-    print('Accuracies:', accuracies)
+        pbar.set_description(desc)
 
-    del data
+        if avg_grad_stop and N < avg_grad_n and acc_change < 0:
+            break
+
+
 

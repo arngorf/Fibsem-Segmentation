@@ -1,0 +1,359 @@
+import pickle
+import os
+import keras
+
+UNCOMPILED_MODEL_FILENAME = 'base_model.h5'
+MODEL_CLASS_FILENAME = 'saved_model.p'
+
+from layers.RotationLayer import RotationLayer
+from layers.FoveationLayer import FoveationLayer
+
+CUSTOM_OBJECTS = {'RotationLayer':RotationLayer,
+                  'FoveationLayer':FoveationLayer,
+                  }
+
+class ModelsManager():
+
+    __slots__ = ('_models',
+                 '_results_path',
+                 )
+
+    def __init__(self, results_path=None):
+
+        self._models = {}
+
+        if results_path == None:
+            self._results_path = os.path.join(os.getcwd(), '../results')
+        else:
+            self._results_path = results_path
+
+        self._load_models()
+
+    def _load_models(self):
+        directory = os.fsencode(self._results_path)
+
+        for file in os.listdir(directory):
+
+            model_dir = os.fsdecode(file)
+            model_class_path = os.path.join(self._results_path,
+                                            model_dir,
+                                            MODEL_CLASS_FILENAME,
+                                            )
+
+            model_class = pickle.load(open(model_class_path, "rb"))
+
+            name = model_class.name
+            callback = lambda _: self.new_checkpoint_callback(name)
+
+            model_class.load_model()
+            model_class.set_model_callback(callback)
+
+            self._models[name] = model_class
+
+    def new_model(self, model, name, input_shape, output_shape, **kwargs):
+
+        if name in self._models:
+            err_msg = "Model with name '" + name + "' already exists"
+            raise ValueError(err_msg)
+
+        def callback():
+            self.new_checkpoint_callback(name)
+
+        model_class = ModelClass(model,
+                                 name,
+                                 self._results_path,
+                                 input_shape,
+                                 output_shape,
+                                 **kwargs)
+
+        model_class.set_model_callback(callback)
+
+        self._models[name] = model_class
+
+        callback()
+
+    def get_model(self, name):
+        return self._models[name]
+
+    def new_checkpoint_callback(self, model_id):
+
+        model_class = self._models[model_id]
+
+        model = model_class.pop_current_model()
+        callback = model_class.pop_model_callback()
+
+        model_dir = model_class.model_dir
+
+        model_class_path = os.path.join(model_dir,
+                                        MODEL_CLASS_FILENAME,
+                                        )
+
+        pickle.dump(model_class, open(model_class_path, "wb"))
+
+        model_class.set_current_model(model)
+        model_class.set_model_callback(callback)
+
+
+
+class ModelClass():
+
+    __slots__ = ('_model',
+                 '_name',
+                 '_model_dir',
+                 '_base_model_path',
+                 '_sessions',
+                 '_session',
+                 '_save_model_callback',
+                 '_loss',
+                 '_opt',
+                 '_metrics',
+                 '_init_lr',
+                 '_lr_decay',
+                 '_epoch',
+                 '_input_shape',
+                 '_output_shape',
+                 )
+
+    def __init__(self,
+                 model,
+                 name,
+                 results_path,
+                 input_shape,
+                 output_shape,
+                 **kwargs):
+
+        self._model = model
+        self._name = name
+        self._model_dir = os.path.join(results_path, name)
+        self._base_model_path = os.path.join(self._model_dir, 'base_model.h5')
+        self._epoch = 0
+        self._input_shape = input_shape
+        self._output_shape = output_shape
+
+        self._sessions = {}
+
+        if os.path.isdir(self._model_dir):
+            err_msg = "Model already exists:'" + self._model_dir + "'"
+            raise FileExistsError(err_msg)
+
+        allowed_kwargs = {'loss',
+                          'opt',
+                          'metrics',
+                          'init_lr',
+                          'lr',
+                          'decay',
+                          }
+
+        for kwarg in kwargs:
+            if kwarg not in allowed_kwargs:
+                raise TypeError('Keyword argument not understood:', kwarg)
+
+        os.makedirs(self._model_dir)
+        self._model.save(self._base_model_path)
+
+        if 'loss' in kwargs:
+            self._loss = kwargs['loss']
+        else:
+            self._loss = 'categorical_crossentropy'
+
+        if 'metrics' in kwargs:
+            self._metrics = kwargs['metrics']
+        else:
+            self._metrics = ['accuracy']
+
+        if 'lr' in kwargs or 'init_lr' in kwargs:
+            if 'lr' in kwargs:
+                self._init_lr = kwargs['lr']
+            elif 'init_lr' in kwargs:
+                self._init_lr = kwargs['init_lr']
+        else:
+            self._init_lr = 0.001
+
+        if 'decay' in kwargs:
+            self._lr_decay = kwargs['decay']
+        else:
+            self._lr_decay = 1e-6
+
+        if 'opt' in kwargs:
+            self._opt = kwargs['opt']
+        else:
+            #opt = keras.optimizers.Adam(lr=initial_learning_rate,
+            #                            decay=learning_rate_decay,
+            #                            clipnorm=1.0)
+            self._opt = 'SGD'#
+
+        self.load_model()
+
+    def _get_opt(self, **kwargs):
+
+        if self._opt == 'SGD':
+            return keras.optimizers.SGD(lr=self._init_lr,
+                                        momentum=0.9,
+                                        decay=self._lr_decay,
+                                        nesterov=True)
+
+    def load_model(self, session='latest', which='base'):
+
+        if which == 'base':
+            load_path = self._base_model_path
+        if which == 'last':
+            pass
+        elif which == 'best':
+            pass
+
+        self._model = keras.models.load_model(load_path, custom_objects=CUSTOM_OBJECTS)
+
+        if which == 'base':
+            opt = self._get_opt()
+            self._model.compile(loss=self._loss,
+                                optimizer=opt,
+                                metrics=self._metrics,
+                                )
+
+    def save_model(self, model, train_acc, test_acc, epoch, session_name):
+
+        session_dir = os.path.join(self._model_dir, session_name)
+
+        if not os.path.isdir(session_dir):
+            os.makedirs(session_dir)
+
+        model_name = 'epoch_' + str(epoch) + '.h5'
+
+        model_path = os.path.join(session_dir, model_name)
+
+        model.save(model_path)
+
+        saved_model = SavedModel(model_path, train_acc, test_acc, epoch)
+
+        if not session_name in self._sessions:
+            self._sessions[session_name] = [saved_model]
+        else:
+            self._sessions[session_name].append(saved_model)
+
+        self._epoch = epoch
+
+        self._save_model_callback()
+
+    def pop_current_model(self):
+
+        model = self._model
+        self._model = None
+
+        return model
+
+    def set_current_model(self, model):
+        self._model = model
+
+    def pop_model_callback(self):
+
+        callback = self._save_model_callback
+        self._save_model_callback = None
+
+        return callback
+
+    def set_model_callback(self, callback):
+        self._save_model_callback = callback
+
+    def set_session(self, session_name):
+        self._session = session_name
+
+    def summary(self):
+
+        print('___Model Summary___')
+        print('name:', self._name)
+        print('loss:', self._loss)
+        print('opt:', type(self._opt).__name__)
+        print('metrics:', self._metrics)
+
+        self._model.summary()
+
+        for layer in self._model.layers:
+            print(layer.get_output_at(0).get_shape().as_list())
+
+    def session_summary(self, session_name):
+
+        saved_model_list = self._sessions[session_name]
+
+        print('Model:', self._name, 'session:', self.session, 'summary:')
+        for saved_model in saved_model_list:
+            msg =  'Epoch {:d}, '.format(saved_model.epoch)
+            msg += 'train acc: {:04.2f}, '.format(saved_model.train_acc)
+            msg += 'test acc: {:04.2f}, '.format(saved_model.test_acc)
+            print(msg)
+
+    @property
+    def model_dir(self):
+        return self._model_dir
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def model(self):
+        return self._model
+
+    @property
+    def next_epoch(self):
+        return self._epoch + 1
+
+    @property
+    def session(self):
+        if self._session == None:
+            return 'default'
+        return self._session
+
+    @property
+    def input_shape(self):
+        return self._input_shape
+
+    @property
+    def output_shape(self):
+        return self._output_shape
+
+class SavedModel():
+
+    __slots__ = ('_path',
+                 '_test_acc',
+                 '_train_acc',
+                 '_epoch',
+                 )
+
+    def __init__(self, path, train_acc, test_acc, epoch):
+        self._path = path
+        self._test_acc = test_acc
+        self._train_acc = train_acc
+        self._epoch = epoch
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def test_acc(self):
+        return self._test_acc
+
+    @test_acc.setter
+    def test_acc(self, value):
+        self._test_acc = value
+
+    @property
+    def train_acc(self):
+        return self._train_acc
+
+    @train_acc.setter
+    def train_acc(self, value):
+        self._train_acc = value
+
+    @property
+    def epoch(self):
+        return self._epoch
+
+
+'''
+custom_objects={'RotationLayer':RotationLayer, 'FoveationLayer':FoveationLayer}
+
+if load_model:
+    model_path = os.path.join(save_dir, load_model_name)
+    model = keras.models.load_model(model_path, custom_objects=custom_objects)
+'''

@@ -4,7 +4,6 @@ from PIL import Image
 from random import shuffle, randint, uniform
 from tqdm import tqdm
 import math
-import multiprocessing
 import numpy as np
 import os
 import re
@@ -15,8 +14,7 @@ import util.Online_Parameter_Calculation as OPC
 NO_SEGMENTATION = 255
 NO_LABEL = 255
 
-def load_image(path_bounds=None):
-    path, bounds = path_bounds
+def load_image(path, bounds):
     img = np.array(Image.open(path))
     return img[bounds[0]:bounds[1], bounds[2]:bounds[3]]
 
@@ -572,6 +570,10 @@ class PatchDataset(object):
     def batch_size(self):
         return self._batch_size
 
+    @property
+    def feature_class(self):
+        return self._feature_shape
+
     def get_number_of_remaining_available_batches(self):
         return [feature_class.get_number_of_remaining_available_batches() for feature_class in self.feature_classes]
 
@@ -579,7 +581,9 @@ class PatchDataset(object):
 
         opc = OPC.Online_Parameter_Calculation()
 
-        for image_path in tqdm(self._image_paths,
+        image_paths = self._image_params[1]
+
+        for image_path in tqdm(image_paths,
                                ascii = True,
                                desc = 'Calculating normalization parameters'):
 
@@ -768,8 +772,9 @@ class PatchDataset(object):
 
             images_to_load = len(image_paths)
 
-            pool = multiprocessing.Pool(8)
-            image_block = pool.map(load_image, zip(image_paths, [bounds for i in image_paths]))
+            image_block = []
+            for path in image_paths:
+                image_block.append(load_image(path, bounds))
 
             image = np.stack(image_block, axis=0)
 
@@ -778,21 +783,32 @@ class PatchDataset(object):
             pad_i = self._feature_shape[2] // 2
 
             image = np.pad(image,
-                           [ (pad_k, pad_k),
-                             (pad_j, pad_j),
-                             (pad_i, pad_i) ],
-                           mode='reflect')
+                           [(pad_k, pad_k),
+                            (pad_j, pad_j),
+                            (pad_i, pad_i)
+                           ],
+                           mode='reflect',
+                           )
 
             segmented_img = np.array(Image.open(segmentation_path))
 
             segmented_img = segmented_img[bounds[0]:bounds[1],
                                           bounds[2]:bounds[3]]
 
+            segmented_img = np.pad(segmented_img,
+                                   [(pad_j, pad_j),
+                                    (pad_i, pad_i),
+                                   ],
+                                   mode='constant',
+                                   constant_values=255,
+                                   )
+
             j, i = np.where(segmented_img != NO_LABEL)
 
             cur_idx = 0
 
             total_batches = i.shape[0]//32
+            kkk = self._feature_shape[0]//2
 
             if max_batches != None:
                 total_batches = min(total_batches, max_batches)
@@ -806,8 +822,6 @@ class PatchDataset(object):
 
                 x = []
 
-                kkk = self._feature_shape[0]//2
-
                 for idx in range(batch_size):
 
                     jjj = jj[idx]
@@ -817,11 +831,6 @@ class PatchDataset(object):
                                    jjj-pad_j:jjj+pad_j+1,
                                    iii-pad_i:iii+pad_i+1],
                                    )
-                    #x.append(get_padded_image(image,
-                    #                          self._feature_shape[0]//2,
-                    #                          jj[idx],
-                    #                          ii[idx],
-                    #                          self._feature_shape))
 
                 x = np.stack(x, axis=0)
                 y = reverse_mapper(segmented_img[jj, ii])

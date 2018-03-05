@@ -1,10 +1,10 @@
-#from tests.dataset_tests import *
+from tests.dataset_tests import *
 from PatchDataset import PatchDataset
 from test import test_model
 import keras
 from layers.RotationLayer import RotationLayer
 from layers.FoveationLayer import FoveationLayer
-from tests.invariant_tests import *
+#from tests.invariant_tests import *
 
 '''dataset_dir = '../data/lausanne/'
 batch_size = 32
@@ -26,6 +26,6 @@ if __name__ == '__main__':
     #validate_output_manually()
     #validate_test_output_manually()
     #benchmark_dataset(25000)
-    #benchmark_test_dataset(25000)
-    pass
+    benchmark_test_dataset(25000)
+
 
