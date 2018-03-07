@@ -74,8 +74,8 @@ class RotationLayer(Layer):
 
             if self.linear_deformation:
 
-                rv_diag = (np.random.random(3) - 0.5) * 0.1 + 1
-                rv_offd = (np.random.random(6) - 0.5) * 0.1
+                rv_diag = (np.random.random(3) - 0.5) * 0.3 + 1
+                rv_offd = (np.random.random(6) - 0.5) * 0.3
 
                 S = K.variable([[rv_diag[0], rv_offd[0], rv_offd[1], 0],
                                 [rv_offd[3], rv_diag[1], rv_offd[2], 0],

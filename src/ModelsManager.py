@@ -12,10 +12,26 @@ CUSTOM_OBJECTS = {'RotationLayer':RotationLayer,
                   'FoveationLayer':FoveationLayer,
                   }
 
+def topology_is_equal(model_a, model_b):
+    if len(model_a.layers) != len(model_b.layers):
+        return False
+
+    for layer_a, layer_b in zip(model_a.layers, model_b.layers):
+
+        if type(layer_a) != type(layer_b):
+            return False
+        if layer_a.input_shape != layer_b.input_shape:
+            return False
+        if layer_a.output_shape != layer_b.output_shape:
+            return False
+
+    return True
+
 class ModelsManager():
 
     __slots__ = ('_models',
                  '_results_path',
+                 '_model_params',
                  )
 
     def __init__(self, results_path=None):
@@ -43,7 +59,9 @@ class ModelsManager():
             model_class = pickle.load(open(model_class_path, "rb"))
 
             name = model_class.name
-            callback = lambda _: self.new_checkpoint_callback(name)
+
+            def callback():
+                self.new_checkpoint_callback(name)
 
             model_class.load_model()
             model_class.set_model_callback(callback)
@@ -53,11 +71,14 @@ class ModelsManager():
     def new_model(self, model, name, input_shape, output_shape, **kwargs):
 
         if name in self._models:
-            err_msg = "Model with name '" + name + "' already exists"
-            raise ValueError(err_msg)
+            existing_model = self._models[name].model
 
-        def callback():
-            self.new_checkpoint_callback(name)
+            if not topology_is_equal(model, existing_model):
+                err_msg = "Model with name '" + name + "' already exists, " + \
+                          "but the topology differs"
+                raise ValueError(err_msg)
+
+            return # model already exists
 
         model_class = ModelClass(model,
                                  name,
@@ -65,6 +86,9 @@ class ModelsManager():
                                  input_shape,
                                  output_shape,
                                  **kwargs)
+
+        def callback():
+            self.new_checkpoint_callback(name)
 
         model_class.set_model_callback(callback)
 
@@ -131,6 +155,8 @@ class ModelClass():
         self._output_shape = output_shape
 
         self._sessions = {}
+        self._session = 'default'
+        self._sessions[self._session] = []
 
         if os.path.isdir(self._model_dir):
             err_msg = "Model already exists:'" + self._model_dir + "'"
@@ -175,33 +201,47 @@ class ModelClass():
             self._lr_decay = 1e-6
 
         if 'opt' in kwargs:
-            self._opt = kwargs['opt']
+            if not isinstance(kwargs['opt'], str):
+                raise TypeError("keyword argument 'opt' must be of type str")
+            self._opt = kwargs['opt'].lower()
         else:
-            #opt = keras.optimizers.Adam(lr=initial_learning_rate,
-            #                            decay=learning_rate_decay,
-            #                            clipnorm=1.0)
-            self._opt = 'SGD'#
 
-        self.load_model()
+            self._opt = 'sgd'#
+
+        self.load_model('latest', 'base')
 
     def _get_opt(self, **kwargs):
 
-        if self._opt == 'SGD':
+        if self._opt == 'sgd':
             return keras.optimizers.SGD(lr=self._init_lr,
                                         momentum=0.9,
                                         decay=self._lr_decay,
                                         nesterov=True)
+        elif self._opt == 'adam':
+            return keras.optimizers.Adam(lr=self._init_lr,
+                                         decay=self._lr_decay) #, clipnorm=1.0
 
-    def load_model(self, session='latest', which='base'):
+    def load_model(self, session_name='latest', which='latest'):
+
+        if session_name == 'latest':
+            session_name = self._session #self._latest_session
+        else:
+            session_name = session
+
+        saved_models_list = self._sessions[session_name]
 
         if which == 'base':
             load_path = self._base_model_path
-        if which == 'last':
-            pass
+        elif which == 'latest':
+            saved_model = saved_models_list[-1]
+            load_path = saved_model.path
         elif which == 'best':
-            pass
+            saved_model = max(saved_models_list, key=lambda sm: sm.test_acc)
+            load_path = saved_model.path
 
-        self._model = keras.models.load_model(load_path, custom_objects=CUSTOM_OBJECTS)
+
+        self._model = keras.models.load_model(load_path,
+                                              custom_objects=CUSTOM_OBJECTS)
 
         if which == 'base':
             opt = self._get_opt()
@@ -256,6 +296,7 @@ class ModelClass():
 
     def set_session(self, session_name):
         self._session = session_name
+        #self._latest_session = self._session
 
     def summary(self):
 
@@ -270,7 +311,7 @@ class ModelClass():
         for layer in self._model.layers:
             print(layer.get_output_at(0).get_shape().as_list())
 
-    def session_summary(self, session_name):
+    def session_summary(self, session_name='default'):
 
         saved_model_list = self._sessions[session_name]
 
@@ -299,8 +340,6 @@ class ModelClass():
 
     @property
     def session(self):
-        if self._session == None:
-            return 'default'
         return self._session
 
     @property

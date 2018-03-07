@@ -5,8 +5,8 @@ import numpy as np
 def train_model(dataset,
                 stored_model,
                 batch_size,
-                iterations_per_epoch=20000,
-                max_epochs=5,
+                iterations_per_epoch=4096*32,
+                max_epochs=30,
                 **kwargs,
                 ):
 
@@ -48,12 +48,14 @@ def train_model(dataset,
 
         for step in tqdm(range(int(iterations_per_epoch / batch_size))):
 
-            x_batch, y_batch = dataset.next_batch()
-            x_batch = x_batch.reshape((batch_size, d, h, w, 1))
+            x, y = dataset.next_batch()
+            x = x.reshape((batch_size, d, h, w, 1))
 
-            scores = model.train_on_batch(x_batch, y_batch)
+            scores = model.train_on_batch(x, y)
+
             losses.append(scores[0])
             train_accs.append(scores[1])
+
 
         # Summarize epoch results
 
@@ -73,7 +75,7 @@ def train_model(dataset,
 
         desc =  'Epoch {:d} '.format(epoch)
         desc += 'acc ({:04.2f}, {:04.2f}) '.format(train_acc, test_acc)
-        desc += '(test change(5): {:04.2f})'.format(acc_change)
+        desc += '(test change({:d}): {:04.4f})'.format(avg_grad_n, acc_change)
 
         stored_model.save_model(model, train_acc, test_acc, epoch, session)
 

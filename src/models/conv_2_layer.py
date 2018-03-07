@@ -6,7 +6,7 @@ import keras
 import keras.backend as K
 
 def make_model(num_classes,
-               name='rf_2_layer',
+               name='conv_2_layer',
                conv_dropout_p=0.75,
                dense_dropout_p=0.5):
 
@@ -15,11 +15,7 @@ def make_model(num_classes,
 
     model = Sequential()
 
-    model.add(RotationLayer(input_shape=(input_shape[0],
-                                         input_shape[1],
-                                         input_shape[2],
-                                         1)))
-    model.add(FoveationLayer())
+    model = preprocessing(model, 'all')
 
     model.add(Conv3D(48, (5, 5, 5), padding='valid'))
     model.add(Activation('relu'))

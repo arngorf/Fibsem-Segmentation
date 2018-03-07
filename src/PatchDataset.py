@@ -16,7 +16,8 @@ NO_LABEL = 255
 
 def load_image(path, bounds):
     img = np.array(Image.open(path))
-    return img[bounds[0]:bounds[1], bounds[2]:bounds[3]]
+    return img[bounds[0]:bounds[1],
+               bounds[2]:bounds[3]]
 
 def get_padded_image(img, img_k, img_j, img_i, feature_shape):
 
@@ -382,6 +383,7 @@ class PatchDataset(object):
                  '_train_params',
                  '_test_params',
                  '_post_processing_params',
+                 '_test_segmentations',
                  '_new_image_probability',
                  'number_of_available_batches',
                  '_mean',
@@ -520,6 +522,8 @@ class PatchDataset(object):
         else:
 
             self._mean, self._std = self._calculate_normalization_params()
+
+        self._test_segmentations = self._get_image_indices_with_class_list(self._test_params)
 
         self._feature_classes = []
 
@@ -755,7 +759,7 @@ class PatchDataset(object):
 
     def test_data_stream(self, batch_size, max_batches=None):
 
-        segmentations, bounds = self._get_image_indices_with_class_list(self._test_params)
+        segmentations, bounds = self._test_segmentations
         reverse_class_map = {}
         reverse_mapper = np.vectorize(lambda label: reverse_class_map[label])
 
@@ -790,6 +794,8 @@ class PatchDataset(object):
                            mode='reflect',
                            )
 
+            image = image.astype(np.float32)
+
             segmented_img = np.array(Image.open(segmentation_path))
 
             segmented_img = segmented_img[bounds[0]:bounds[1],
@@ -800,7 +806,7 @@ class PatchDataset(object):
                                     (pad_i, pad_i),
                                    ],
                                    mode='constant',
-                                   constant_values=255,
+                                   constant_values=NO_LABEL,
                                    )
 
             j, i = np.where(segmented_img != NO_LABEL)
@@ -860,7 +866,9 @@ class PatchDataset(object):
             for j in range(pad_j, h+pad_j):
                 for i in range(pad_i, w+pad_i):
 
-                    x = img[k-pad_k:k+pad_k+1, j-pad_j:j+pad_j+1, i-pad_i:i+pad_i+1]
+                    x = img[k-pad_k:k+pad_k+1,
+                            j-pad_j:j+pad_j+1,
+                            i-pad_i:i+pad_i+1]
 
                     yield x, k-pad_k, j-pad_j, i-pad_i
 
