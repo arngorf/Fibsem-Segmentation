@@ -658,7 +658,7 @@ class PatchDataset(object):
         sparseSegmentations = [[] for i in range(self._n_classes)]
 
         i_max = j_max = 0
-        i_min = j_min = math.inf
+        i_min = j_min = 2**64
 
         for img_idx, path in tqdm(zip(image_params[2], image_params[1]),
                                    ascii = True,
