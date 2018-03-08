@@ -19,13 +19,6 @@ if __name__ == '__main__':
 
     model_manager = ModelsManager()
 
-    #model, model_name, input_shape = micro.make_model(num_classes,
-    #                                                  norm_params=norm_params)
-    #model, model_name, input_shape = mini.make_model(num_classes,
-    #                                                  norm_params=norm_params) #0.63
-    #model, model_name, input_shape = midi.make_model(num_classes,
-
-
     conv_dropout_p_list = [0.1, 0.25, 0.5, 0.75, 0.9]
     dense_dropout_p_list = [0.1, 0.25, 0.5, 0.75, 0.9]
 
@@ -33,9 +26,9 @@ if __name__ == '__main__':
         for dense_dropout_p in dense_dropout_p_list:
 
             train_params = conv_2_layer.make_model(num_classes,
-                                                   norm_params=norm_params,
                                                    conv_dropout_p=conv_dropout_p,
                                                    dense_dropout_p=dense_dropout_p,
+                                                   norm_params=norm_params,
                                                    )
 
             model, model_name, input_shape = train_params
@@ -59,8 +52,8 @@ if __name__ == '__main__':
                                    norm_params=norm_params,
                                    )
 
-            iterations_per_epoch=1048576
-            max_epochs=100
+            iterations_per_epoch=524288
+            max_epochs=256
 
             train_model(dataset,
                         model_class,
@@ -69,5 +62,3 @@ if __name__ == '__main__':
                         max_epochs,
                         avg_grad_stop=True,
                         )
-
-            #model_class.session_summary()

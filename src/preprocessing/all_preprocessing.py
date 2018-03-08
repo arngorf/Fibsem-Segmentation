@@ -1,8 +1,8 @@
-from models.preprocessing.affine_augmentation import affine_augmentation
-from models.preprocessing.foveation import foveation
-from models.preprocessing.normalize import normalize
+from .affine_augmentation import affine_augmentation
+from .foveation import foveation
+from .normalize import normalize
 
-def preprocessing(model, parameters, **kwargs):
+def all_preprocessing(model, parameters, **kwargs):
 
     if parameters == 'all' or 'rotation' in parameters:
         model = affine_augmentation(model, **kwargs)
