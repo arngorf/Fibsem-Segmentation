@@ -10,8 +10,8 @@ from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
 
 if __name__ == '__main__':
-    dataset_path = '../data/lausanne'
-    #dataset_path = '/scratch/xkv467/lausanne'
+    #dataset_path = '../data/lausanne'
+    dataset_path = '/scratch/xkv467/lausanne'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     num_classes = len(img_class_map)
