@@ -7,8 +7,7 @@ def train_model(dataset,
                 batch_size,
                 iterations_per_epoch=4096*32,
                 max_epochs=30,
-                **kwargs,
-                ):
+                **kwargs):
 
     allowed_kwargs = {'avg_grad_n',
                       'avg_grad_stop',
@@ -82,7 +81,7 @@ def train_model(dataset,
 
         pbar.set_description(desc)
 
-        if avg_grad_stop and N < avg_grad_n and acc_change < 0:
+        if avg_grad_stop and N >= avg_grad_n and acc_change < 0:
             break
 
 
