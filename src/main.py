@@ -116,6 +116,6 @@ def dropbox_effect():
 
 if __name__ == '__main__':
 
-    mini_test()
+    #mini_test()
 
-    #dropbox_effect()
+    dropbox_effect()
