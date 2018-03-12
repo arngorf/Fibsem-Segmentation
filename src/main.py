@@ -6,21 +6,71 @@ os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] ="1"
 
 from ModelsManager import ModelsManager
-
 from PatchDataset import PatchDataset
 
-if __name__ == '__main__':
-    #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+
+def mini_test():
+    dataset_path = '../data/lausanne'
+    results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     num_classes = len(img_class_map)
     norm_params = (142.1053396892233, 30.96410819657719)
 
-    model_manager = ModelsManager()
+    model_manager = ModelsManager(results_path)
 
-    conv_dropout_p_list = [0.1, 0.25, 0.5, 0.75, 0.9]
-    dense_dropout_p_list = [0.1, 0.25, 0.5, 0.75, 0.9]
+
+    train_params = mini.make_model(num_classes,
+                                   norm_params=norm_params,
+                                   )
+
+    model, model_name, input_shape = train_params
+
+    model_manager.new_model(model,
+                            model_name,
+                            input_shape,
+                            num_classes,
+                            lr = 0.0001,
+                            )
+
+    model_class = model_manager.get_model(model_name)
+    input_shape = model_class.input_shape
+
+    model_class.set_session('default')
+
+    dataset = PatchDataset(dataset_path,
+                           batch_size,
+                           input_shape,
+                           img_class_map,
+                           norm_params=norm_params,
+                           )
+
+    iterations_per_epoch=131072
+    max_epochs=32
+
+    train_model(dataset,
+                model_class,
+                batch_size,
+                iterations_per_epoch,
+                max_epochs,
+                avg_grad_stop=False,
+                )
+
+    model_class.summary()
+
+def dropbox_effect():
+    #dataset_path = '../data/lausanne'
+    dataset_path = '/scratch/xkv467/lausanne'
+    results_path = '../results'
+    batch_size = 32
+    img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
+    num_classes = len(img_class_map)
+    norm_params = (142.1053396892233, 30.96410819657719)
+
+    model_manager = ModelsManager(results_path)
+
+    conv_dropout_p_list = [0.25, 0.5, 0.75]
+    dense_dropout_p_list = [0.25, 0.5, 0.75]
 
     for conv_dropout_p in conv_dropout_p_list:
         for dense_dropout_p in dense_dropout_p_list:
@@ -63,3 +113,9 @@ if __name__ == '__main__':
                         avg_grad_stop=True,
                         )
 
+
+if __name__ == '__main__':
+
+    mini_test()
+
+    #dropbox_effect()

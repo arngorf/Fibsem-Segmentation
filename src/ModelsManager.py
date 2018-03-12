@@ -1,6 +1,7 @@
-import pickle
-import os
 import keras
+import os
+import pickle
+import warnings
 
 UNCOMPILED_MODEL_FILENAME = 'base_model.h5'
 MODEL_CLASS_FILENAME = 'saved_model.p'
@@ -63,8 +64,11 @@ class ModelsManager():
             def callback():
                 self.new_checkpoint_callback(name)
 
-            model_class.load_model()
+            #model_class.load_model()
             model_class.set_model_callback(callback)
+
+            model_class.set_model_path(os.path.join(self._results_path,
+                                                    model_dir))
 
             self._models[name] = model_class
 
@@ -116,6 +120,10 @@ class ModelsManager():
 
         model_class.set_current_model(model)
         model_class.set_model_callback(callback)
+
+    @property
+    def models(self):
+        return self._models.keys()
 
 
 
@@ -234,21 +242,30 @@ class ModelClass():
             load_path = self._base_model_path
         elif which == 'latest':
             saved_model = saved_models_list[-1]
-            load_path = saved_model.path
+            load_path = os.path.join(self._model_dir,
+                                     session_name,
+                                     saved_model.name)
         elif which == 'best':
             saved_model = max(saved_models_list, key=lambda sm: sm.test_acc)
-            load_path = saved_model.path
-
-
-        self._model = keras.models.load_model(load_path,
-                                              custom_objects=CUSTOM_OBJECTS)
+            load_path = os.path.join(self._model_dir,
+                                     session_name,
+                                     saved_model.name)
 
         if which == 'base':
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self._model = keras.models.load_model(load_path,
+                                                      custom_objects=CUSTOM_OBJECTS)
+
             opt = self._get_opt()
             self._model.compile(loss=self._loss,
                                 optimizer=opt,
                                 metrics=self._metrics,
                                 )
+
+        else:
+            self._model = keras.models.load_model(load_path,
+                                                  custom_objects=CUSTOM_OBJECTS)
 
     def save_model(self, model, train_acc, test_acc, epoch, session_name):
 
@@ -263,7 +280,7 @@ class ModelClass():
 
         model.save(model_path)
 
-        saved_model = SavedModel(model_path, train_acc, test_acc, epoch)
+        saved_model = SavedModel(model_name, train_acc, test_acc, epoch)
 
         if not session_name in self._sessions:
             self._sessions[session_name] = [saved_model]
@@ -294,6 +311,10 @@ class ModelClass():
     def set_model_callback(self, callback):
         self._save_model_callback = callback
 
+    def set_model_path(self, model_path):
+        self._model_dir = model_path
+        self._base_model_path = os.path.join(self._model_dir, 'base_model.h5')
+
     def set_session(self, session_name):
         self._session = session_name
         #self._latest_session = self._session
@@ -322,6 +343,15 @@ class ModelClass():
             msg += 'test acc: {:04.2f}, '.format(saved_model.test_acc)
             print(msg)
 
+    def session_stats(self, session_name='default'):
+        saved_model_list = self._sessions[session_name]
+        stats = [(m.epoch,
+                  m.train_acc,
+                  m.test_acc,
+                  ) for m in saved_model_list]
+        epoch, train_acc, test_acc = zip(*stats)
+        return epoch, train_acc, test_acc
+
     @property
     def model_dir(self):
         return self._model_dir
@@ -343,6 +373,10 @@ class ModelClass():
         return self._session
 
     @property
+    def sessions(self):
+        return self._sessions.keys()
+
+    @property
     def input_shape(self):
         return self._input_shape
 
@@ -352,21 +386,21 @@ class ModelClass():
 
 class SavedModel():
 
-    __slots__ = ('_path',
+    __slots__ = ('_name',
                  '_test_acc',
                  '_train_acc',
                  '_epoch',
                  )
 
-    def __init__(self, path, train_acc, test_acc, epoch):
-        self._path = path
+    def __init__(self, name, train_acc, test_acc, epoch):
+        self._name = name
         self._test_acc = test_acc
         self._train_acc = train_acc
         self._epoch = epoch
 
     @property
-    def path(self):
-        return self._path
+    def name(self):
+        return self._name
 
     @property
     def test_acc(self):
