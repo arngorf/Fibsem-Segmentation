@@ -173,7 +173,7 @@ def single_train():
                 avg_grad_stop=True,
                 )
 
-train_n_time(n):
+def train_n_time(n):
     #dataset_path = '../data/lausanne'
     dataset_path = '/scratch/xkv467/lausanne'
     results_path = '../results'
