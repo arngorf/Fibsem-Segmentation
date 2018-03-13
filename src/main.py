@@ -126,17 +126,17 @@ def single_train():
     conv_dropout_p = 0.5
     dense_dropout_p = 0.5
 
-    train_params = conv_2_layer_no_pool.make_model(num_classes,
+    '''train_params = conv_2_layer_no_pool.make_model(num_classes,
                                                    conv_dropout_p=conv_dropout_p,
                                                    dense_dropout_p=dense_dropout_p,
                                                    norm_params=norm_params,
-                                                   )
+                                                   )'''
 
-    '''train_params = conv_2_layer.make_model(num_classes,
+    train_params = conv_2_layer.make_model(num_classes,
                                            conv_dropout_p=conv_dropout_p,
                                            dense_dropout_p=dense_dropout_p,
                                            norm_params=norm_params,
-                                           )'''
+                                           )
 
     model, model_name, input_shape = train_params
 
