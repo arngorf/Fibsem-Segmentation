@@ -14,6 +14,10 @@ CUSTOM_OBJECTS = {'RotationLayer':RotationLayer,
                   }
 
 def topology_is_equal(model_a, model_b):
+
+    if model_a.layers == None and model_b.layers == None:
+        return True
+
     if len(model_a.layers) != len(model_b.layers):
         return False
 
