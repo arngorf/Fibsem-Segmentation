@@ -15,7 +15,6 @@ def train_model(dataset,
 
     for kwarg in kwargs:
         if kwarg not in allowed_kwargs:
-            print(kwarg, allowed_kwargs)
             raise TypeError('Keyword argument not understood:', kwarg)
 
     avg_grad_n = 5

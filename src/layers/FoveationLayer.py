@@ -35,8 +35,6 @@ class FoveationLayer(Layer):
 
         weights = np.concatenate([gauss_inner_3d.reshape((1,7,7,7,1,1)), gauss_outer_3d.reshape((1,7,7,7,1,1))],5)
 
-        print(input_shape)
-
         self.conv3d_layer = Conv3D(2,
                                    (7, 7, 7),
                                    padding='same',

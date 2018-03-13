@@ -20,7 +20,6 @@ class InvariantDifferentialOperatorLayer(Layer):
         #assert input_shape[-1] == 2
 
         self.the_output_shape = input_shape
-        print(input_shape, self._scales)
         k_size = input_shape[1]//2
 
         weight_list = []
