@@ -1,5 +1,5 @@
 import os
-from models import micro, mini, midi, conv_2_layer, conv_2_layer_no_pool
+from models import micro, mini, midi, conv_2_layer, conv_2_layer_pass_through
 from train import train_model
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -126,17 +126,17 @@ def single_train():
     conv_dropout_p = 0.5
     dense_dropout_p = 0.5
 
-    '''train_params = conv_2_layer_no_pool.make_model(num_classes,
-                                                   conv_dropout_p=conv_dropout_p,
-                                                   dense_dropout_p=dense_dropout_p,
-                                                   norm_params=norm_params,
-                                                   )'''
+    train_params = conv_2_layer_pass_through.make_model(num_classes,
+                                                        conv_dropout_p=conv_dropout_p,
+                                                        dense_dropout_p=dense_dropout_p,
+                                                        norm_params=norm_params,
+                                                        )
 
-    train_params = conv_2_layer.make_model(num_classes,
+    '''train_params = conv_2_layer.make_model(num_classes,
                                            conv_dropout_p=conv_dropout_p,
                                            dense_dropout_p=dense_dropout_p,
                                            norm_params=norm_params,
-                                           )
+                                           )'''
 
     model, model_name, input_shape = train_params
 
@@ -187,7 +187,7 @@ def train_n_time(n):
     conv_dropout_p = 0.5
     dense_dropout_p = 0.5
 
-    session_names = ['run_' + str(i+1) for i in range(n)]
+    session_names = ['run_' + str(i+1) + '_new_data' for i in range(n)]
 
     train_params = conv_2_layer.make_model(num_classes,
                                            conv_dropout_p=conv_dropout_p,
@@ -234,5 +234,5 @@ if __name__ == '__main__':
 
     #mini_test()
     #dropbox_effect()
-    #single_train()
-    train_n_time(3)
+    single_train()
+    #train_n_time(3)
