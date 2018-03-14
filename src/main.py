@@ -192,7 +192,7 @@ def train_n_time(n):
     train_params = conv_2_layer.make_model(num_classes,
                                            conv_dropout_p=conv_dropout_p,
                                            dense_dropout_p=dense_dropout_p,
-                                           name='conv_2_layer_new_data'
+                                           name='conv_2_layer_new_data',
                                            norm_params=norm_params,
                                            )
 
