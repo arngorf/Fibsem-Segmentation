@@ -20,12 +20,12 @@ def make_model(num_classes,
 
     model.add(Conv3D(48, (5, 5, 5), padding='valid'))
     model.add(Activation('relu'))
-    model.add(MaxPooling3D(pool_size=(3, 3, 3)))
+    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(conv_dropout_p))
 
-    model.add(Conv3D(96, (3, 3, 3), padding='valid'))
+    model.add(Conv3D(64, (4, 4, 4), padding='valid'))
     model.add(Activation('relu'))
-    model.add(MaxPooling3D(pool_size=(3, 3, 3)))
+    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(conv_dropout_p))
 
     model.add(Flatten())

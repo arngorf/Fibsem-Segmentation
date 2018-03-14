@@ -10,22 +10,25 @@ def compare_all():
     for model_name in model_names:
         saved_model = model_manager.get_model(model_name)
 
-        epoch, train, test = saved_model.session_stats()
+        for session_name in  saved_model.sessions:
+            if session_name == 'default':
+                continue
+            epoch, train, test = saved_model.session_stats(session_name)
 
-        if len(epoch) > 20:
-            epoch = epoch[:20]
-            train = train[:20]
-            test = test[:20]
+            if len(epoch) > 32:
+                epoch = epoch[:32]
+                train = train[:32]
+                test = test[:32]
 
-        plt.subplot(1,2,1)
-        plt.title('Train acc')
-        plt.plot(epoch, train, label = model_name)
-        plt.legend()
+            plt.subplot(1,2,1)
+            plt.title('Train acc')
+            plt.plot(epoch, train, label = model_name+'.'+session_name)
+            plt.legend()
 
-        plt.subplot(1,2,2)
-        plt.title('Test acc')
-        plt.plot(epoch, test, label = model_name)
-        plt.legend()
+            plt.subplot(1,2,2)
+            plt.title('Test acc')
+            plt.plot(epoch, test, label = model_name)
+            plt.legend()
 
     plt.show()
 

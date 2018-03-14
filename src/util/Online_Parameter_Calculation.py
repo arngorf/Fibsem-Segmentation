@@ -25,6 +25,7 @@ class Online_Parameter_Calculation():
 
         self._running_sum += np.sum(Y)
         n_2 = np.sum(indices)
+        #print(self._n_1, n_2)
 
         if self._n_1 + n_2 > 0:
             mu_2 = np.mean(Y)
@@ -34,7 +35,7 @@ class Online_Parameter_Calculation():
             self._s_1 = np.sqrt(( (self._n_1-1)*self._s_1**2 + \
                             (n_2-1)*s_2**2 + \
                              self._n_1*(self._mu_1-mu)**2 + \
-                             n_2*(mu_2-mu)**2 ) / (self._n_1 + n_2 - 1))
+                             n_2*(mu_2-mu)**2 ) / (self._n_1 + n_2))
 
             self._n_1 += n_2
             self._mu_1 = mu

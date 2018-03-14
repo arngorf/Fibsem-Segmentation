@@ -74,13 +74,15 @@ class ModelsManager():
             model_class.set_model_path(os.path.join(self._results_path,
                                                     model_dir))
 
+            model_class.load_model('latest', 'base')
+
             self._models[name] = model_class
 
     def new_model(self, model, name, input_shape, output_shape, **kwargs):
 
         if name in self._models:
-            existing_model = self._models[name].model
-
+            existing_model_class = self._models[name]
+            existing_model = existing_model_class.model
             if not topology_is_equal(model, existing_model):
                 err_msg = "Model with name '" + name + "' already exists, " + \
                           "but the topology differs"
@@ -321,7 +323,7 @@ class ModelClass():
 
     def set_session(self, session_name):
         self._session = session_name
-        #self._latest_session = self._session
+        self._epoch = len(self._sessions[self._session])
 
     def summary(self):
 
@@ -349,6 +351,7 @@ class ModelClass():
 
     def session_stats(self, session_name='default'):
         saved_model_list = self._sessions[session_name]
+
         stats = [(m.epoch,
                   m.train_acc,
                   m.test_acc,

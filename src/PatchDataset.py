@@ -719,7 +719,7 @@ class PatchDataset(object):
         for i in range(len(self._extra_batches)-1,-1,-1):
 
             y = self._extra_batches[i][1]
-            label = np.argmin(y)
+            label = np.argmax(y)
 
             if counts[label] < np.ceil(self._batch_size / self._n_classes):
                 queried_data.append(self._extra_batches[i])
@@ -741,7 +741,8 @@ class PatchDataset(object):
                 self.is_non_full.set()
 
             y = result[1]
-            label = np.argmin(y)
+            label = np.argmax(y)
+
             if counts[label] < np.ceil(self._batch_size / self._n_classes):
                 queried_data.append(result)
                 counts[label] += 1
@@ -761,6 +762,7 @@ class PatchDataset(object):
 
         segmentations, bounds = self._test_segmentations
         reverse_class_map = {}
+
         reverse_mapper = np.vectorize(lambda label: reverse_class_map[label])
 
         for used_label, image_labels in enumerate(self._img_class_map):
@@ -782,12 +784,11 @@ class PatchDataset(object):
 
             image = np.stack(image_block, axis=0)
 
-            pad_k = self._feature_shape[0] // 2
             pad_j = self._feature_shape[1] // 2
             pad_i = self._feature_shape[2] // 2
 
             image = np.pad(image,
-                           [(pad_k, pad_k),
+                           [(0, 0),
                             (pad_j, pad_j),
                             (pad_i, pad_i)
                            ],
@@ -833,13 +834,15 @@ class PatchDataset(object):
                     jjj = jj[idx]
                     iii = ii[idx]
 
-                    x.append(image[kkk-pad_k:kkk+pad_k+1,
+                    x.append(image[:,
                                    jjj-pad_j:jjj+pad_j+1,
                                    iii-pad_i:iii+pad_i+1],
                                    )
 
                 x = np.stack(x, axis=0)
+                #print(segmented_img[jj, ii])
                 y = reverse_mapper(segmented_img[jj, ii])
+                #print(y)
                 cur_idx += batch_size
 
                 yield x, y, progress

@@ -26,6 +26,7 @@ if __name__ == '__main__':
     #validate_output_manually()
     #validate_test_output_manually()
     #benchmark_dataset(25000)
-    benchmark_test_dataset(25000)
+    #benchmark_test_dataset(25000)
+    validate_train_test()
 
 

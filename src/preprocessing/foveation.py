@@ -1,11 +1,12 @@
 from layers.FoveationLayer import FoveationLayer
 
-def foveation(model, **kwargs):
+def foveation(input_param, **kwargs):
 
-    #if 'input_shape' in kwargs:
-    #    input_shape = kwargs['input_shape']
-    #    model.add(FoveationLayer(input_shape=input_shape))
-    #else:
-    model.add(FoveationLayer())
+    layer = FoveationLayer()
 
-    return model
+    if 'functional_api' in kwargs and kwargs['functional_api'] == True:
+        result = layer(input_param)
+    else:
+        input_param.add(layer)
+
+    return input_param

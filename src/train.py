@@ -31,14 +31,16 @@ def train_model(dataset,
     session = stored_model.session
     d, h, w = stored_model.input_shape
 
+    model.summary()
+
     all_test_accs = []
 
     pbar = tqdm(range(start_epoch, max_epochs),
                 desc='Epoch: {:d}'.format(start_epoch))
 
     for epoch in pbar:
-        # Train the network for this epoch
 
+        # Train the network for this epoch
         train_accs = []
         losses = []
 
@@ -48,6 +50,7 @@ def train_model(dataset,
         for step in tqdm(range(int(iterations_per_epoch / batch_size))):
 
             x, y = dataset.next_batch()
+
             x = x.reshape((batch_size, d, h, w, 1))
 
             scores = model.train_on_batch(x, y)

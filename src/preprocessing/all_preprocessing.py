@@ -1,6 +1,7 @@
 from .affine_augmentation import affine_augmentation
 from .foveation import foveation
 from .normalize import normalize
+from keras.layers import GaussianNoise
 
 def all_preprocessing(model, parameters, **kwargs):
 
@@ -10,5 +11,8 @@ def all_preprocessing(model, parameters, **kwargs):
         model = normalize(model, **kwargs)
     if parameters == 'all' or 'foveation' in parameters:
         model = foveation(model, **kwargs)
+    if parameters == 'all' or 'noise' in parameters:
+        stddev = 5.
+        model.add(GaussianNoise(stddev))
 
     return model
