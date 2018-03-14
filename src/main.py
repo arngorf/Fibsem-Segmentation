@@ -234,5 +234,5 @@ if __name__ == '__main__':
 
     #mini_test()
     #dropbox_effect()
-    single_train()
-    #train_n_time(3)
+    #single_train()
+    train_n_time(3)
