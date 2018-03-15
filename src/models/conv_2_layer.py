@@ -16,7 +16,7 @@ def make_model(num_classes,
 
     model = Sequential()
 
-    model = all_preprocessing(model, 'all', input_shape=k_input_shape, **kwargs)
+    model = all_preprocessing(model, 'normalize', input_shape=k_input_shape, **kwargs)
 
     model.add(Conv3D(48, (5, 5, 5), padding='valid'))
     model.add(Activation('relu'))

@@ -1,12 +1,12 @@
 from layers.FoveationLayer import FoveationLayer
 
-def foveation(input_param, **kwargs):
+def foveation(x, **kwargs):
 
     layer = FoveationLayer()
 
     if 'functional_api' in kwargs and kwargs['functional_api'] == True:
-        result = layer(input_param)
+        result = layer(x)
     else:
-        input_param.add(layer)
+        x.add(layer)
 
-    return input_param
+    return x

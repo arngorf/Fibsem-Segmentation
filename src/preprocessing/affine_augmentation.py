@@ -1,16 +1,12 @@
 from layers.RotationLayer import RotationLayer
 
-def affine_augmentation(input_param, **kwargs):
+def affine_augmentation(x, **kwargs):
 
-    if 'input_shape' in kwargs:
-        input_shape = kwargs['input_shape']
-        layer = RotationLayer(input_shape=input_shape)
-    else:
-        layer = RotationLayer()
+    layer = RotationLayer()
 
     if 'functional_api' in kwargs and kwargs['functional_api'] == True:
-        result = layer(input_param)
+        result = layer(x)
     else:
-        input_param.add(layer)
+        x.add(layer)
 
-    return input_param
+    return x

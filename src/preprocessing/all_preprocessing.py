@@ -1,18 +1,28 @@
 from .affine_augmentation import affine_augmentation
 from .foveation import foveation
 from .normalize import normalize
-from keras.layers import GaussianNoise
+from .noise import noise
+from keras.layers import Reshape
 
-def all_preprocessing(model, parameters, **kwargs):
+def all_preprocessing(x, parameters, **kwargs):
+
+    if 'input_shape' in kwargs:
+        reshape_layer = Reshape(input_shape=kwargs)
+        if 'functional_api' in kwargs and kwargs['functional_api'] == True:
+            x = reshape_layer(x)
+        else:
+            x.add(reshape_layer)
 
     if parameters == 'all' or 'rotation' in parameters:
-        model = affine_augmentation(model, **kwargs)
-    if parameters == 'all' or 'normalize' in parameters:
-        model = normalize(model, **kwargs)
-    if parameters == 'all' or 'foveation' in parameters:
-        model = foveation(model, **kwargs)
-    if parameters == 'all' or 'noise' in parameters:
-        stddev = 2.
-        model.add(GaussianNoise(stddev))
+        x = affine_augmentation(x, **kwargs)
 
-    return model
+    if parameters == 'all' or 'normalize' in parameters:
+        x = normalize(x, **kwargs)
+
+    if parameters == 'all' or 'foveation' in parameters:
+        x = foveation(x, **kwargs)
+
+    if parameters == 'all' or 'noise' in parameters:
+        x = noise(x, **kwargs)
+
+    return x
