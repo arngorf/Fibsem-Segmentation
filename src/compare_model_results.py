@@ -15,10 +15,10 @@ def compare_all():
                 continue
             epoch, train, test = saved_model.session_stats(session_name)
 
-            if len(epoch) > 32:
+            '''if len(epoch) > 32:
                 epoch = epoch[:32]
                 train = train[:32]
-                test = test[:32]
+                test = test[:32]'''
 
             plt.subplot(1,2,1)
             plt.title('Train acc')

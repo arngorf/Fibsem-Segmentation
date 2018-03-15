@@ -73,7 +73,8 @@ class ModelsManager():
 
             model_class.set_model_path(os.path.join(self._results_path,
                                                     model_dir))
-
+            model_class.session_summary()
+            exit()
             model_class.load_model('latest', 'base')
 
             self._models[name] = model_class
