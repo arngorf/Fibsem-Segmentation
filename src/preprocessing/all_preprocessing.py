@@ -12,7 +12,7 @@ def all_preprocessing(model, parameters, **kwargs):
     if parameters == 'all' or 'foveation' in parameters:
         model = foveation(model, **kwargs)
     if parameters == 'all' or 'noise' in parameters:
-        stddev = 5.
+        stddev = 2.
         model.add(GaussianNoise(stddev))
 
     return model
