@@ -1,4 +1,5 @@
 from tests.dataset_tests import *
+from tests.layer_tests import *
 from PatchDataset import PatchDataset
 from test import test_model
 import keras
@@ -27,6 +28,9 @@ if __name__ == '__main__':
     #validate_test_output_manually()
     #benchmark_dataset(25000)
     #benchmark_test_dataset(25000)
-    validate_train_test()
-
+    #validate_train_test()
+    #test_normalization_layer()
+    #test_foveation_layer()
+    #test_affine_layer()
+    test_noise_layer()
 

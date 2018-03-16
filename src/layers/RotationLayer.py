@@ -7,10 +7,12 @@ import tensorflow as tf
 
 class RotationLayer(Layer):
 
-    def __init__(self, linear_deformation=True, **kwargs):
+    def __init__(self, linear_deformation=True, force_use_in_test_phase=False, **kwargs):
         super(RotationLayer, self).__init__(**kwargs)
 
         self.linear_deformation = linear_deformation
+        self.force_use_in_test_phase = force_use_in_test_phase
+        print('self.force_use_in_test_phase',self.force_use_in_test_phase)
 
     def build(self, input_shape):
 
@@ -104,6 +106,9 @@ class RotationLayer(Layer):
             y = tf.gather(K.reshape(inputs, (-1, w*h*d)), indices, axis=1)
 
             return K.reshape(y, (-1, w, h, d, 1))
+
+        if self.force_use_in_test_phase:
+            return augmented_inputs()
 
         return K.in_train_phase(augmented_inputs(), inputs,
                                 training=training)

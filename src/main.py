@@ -102,7 +102,7 @@ def dropbox_effect():
                                    )
 
             iterations_per_epoch=524288
-            max_epochs=256
+            max_epochs=64
 
             train_model(dataset,
                         model_class,
@@ -139,15 +139,15 @@ def single_train():
                                                         )'''
 
     train_params = conv_2_layer.make_model(num_classes,
-                                           conv_dropout_p=conv_dropout_p,
-                                           dense_dropout_p=dense_dropout_p,
+                                           conv_dropout_p,
+                                           dense_dropout_p,
                                            norm_params=norm_params,
                                            )
 
     model, model_name, input_shape = train_params
 
     model_manager.new_model(model,
-                            model_name,
+                            model_name+'_full_preprocessing',
                             input_shape,
                             num_classes,
                             lr = 0.001, #0.001
@@ -169,7 +169,7 @@ def single_train():
                            )
 
     iterations_per_epoch=524288 #4096
-    max_epochs=512
+    max_epochs=64
 
     train_model(dataset,
                 model_class,
@@ -177,7 +177,7 @@ def single_train():
                 iterations_per_epoch,
                 max_epochs,
                 avg_grad_stop=True,
-                avg_grad_n=64
+                avg_grad_n=16,
                 )
 
 def train_n_time(n):

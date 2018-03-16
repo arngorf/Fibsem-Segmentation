@@ -5,7 +5,7 @@ def noise(x, **kwargs):
     if 'noise_stddev' in kwargs:
         stddev = kwargs['stddev']
     else:
-        stddev = 2.
+        stddev = 1.
 
     noise_layer = GaussianNoise(stddev)
 
