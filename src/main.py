@@ -146,8 +146,10 @@ def single_train():
 
     model, model_name, input_shape = train_params
 
+    model_name = model_name+'_full_preprocessing'
+
     model_manager.new_model(model,
-                            model_name+'_full_preprocessing',
+                            model_name,
                             input_shape,
                             num_classes,
                             lr = 0.001, #0.001
