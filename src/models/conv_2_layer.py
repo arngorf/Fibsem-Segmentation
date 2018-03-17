@@ -16,7 +16,11 @@ def make_model(num_classes,
 
     model = Sequential()
 
-    model = all_preprocessing(model, 'all', input_shape=k_input_shape, **kwargs)
+    model = all_preprocessing(model,
+                              ['normalize', 'rotation', 'noise'],
+                              input_shape=k_input_shape,
+                              **kwargs,
+                              )
 
     model.add(Conv3D(48, (5, 5, 5), padding='valid'))
     model.add(Activation('relu'))
@@ -34,6 +38,6 @@ def make_model(num_classes,
     model.add(Dropout(dense_dropout_p))
 
     model.add(Dense(num_classes))
-    model.add(Activation('tanh')) #softmax
+    model.add(Activation('softmax')) #softmax
 
     return model, name, input_shape

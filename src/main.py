@@ -152,7 +152,7 @@ def single_train():
                             model_name,
                             input_shape,
                             num_classes,
-                            lr = 0.005, #0.001
+                            lr = 0.001, #0.001
                             )
 
     model_class = model_manager.get_model(model_name)
@@ -170,8 +170,8 @@ def single_train():
                            norm_params=norm_params,
                            )
 
-    iterations_per_epoch=524288 #4096
-    max_epochs=64
+    iterations_per_epoch=524288//2 #4096
+    max_epochs=64*2
 
     train_model(dataset,
                 model_class,
@@ -179,7 +179,7 @@ def single_train():
                 iterations_per_epoch,
                 max_epochs,
                 avg_grad_stop=True,
-                avg_grad_n=16,
+                avg_grad_n=32,
                 )
 
 def train_n_time(n):
