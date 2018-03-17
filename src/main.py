@@ -152,7 +152,7 @@ def single_train():
                             model_name,
                             input_shape,
                             num_classes,
-                            lr = 0.01, #0.001
+                            lr = 0.005, #0.001
                             )
 
     model_class = model_manager.get_model(model_name)
