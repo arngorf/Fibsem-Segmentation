@@ -32,5 +32,6 @@ if __name__ == '__main__':
     #test_normalization_layer()
     #test_foveation_layer()
     #test_affine_layer()
-    test_noise_layer()
+    #test_noise_layer()
+    test_softmax_layer()
 

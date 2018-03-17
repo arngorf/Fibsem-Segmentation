@@ -1,4 +1,4 @@
-from models.layer_test_models import test_normalization_model, test_foveation_model, test_affine_model
+from models.layer_test_models import test_normalization_model, test_foveation_model, test_affine_model, test_softmax
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
 import matplotlib.pyplot as plt
@@ -336,3 +336,38 @@ def test_noise_layer():
             plt.imshow(z[i,j+5,:,:,0], cmap='gray')
 
         plt.show()
+
+def test_softmax_layer():
+
+    results_path = '../results'
+
+    model_manager = ModelsManager(results_path)
+
+    train_params = test_softmax.make_model()
+
+    model, model_name, input_shape = train_params
+    num_classes = 2
+
+    model_manager.new_model(model,
+                            model_name,
+                            input_shape,
+                            num_classes,
+                            lr = 0.001, #0.001
+                            )
+
+    model_class = model_manager.get_model(model_name)
+
+    model_class.summary()
+
+    input_shape = model_class.input_shape
+
+    model_class.set_session('default')
+
+    x = np.linspace(-10, 10, 30)
+    batch_size = x.shape[0]
+    x = x.reshape(1, batch_size)
+
+    y = model_class.model.predict(x)
+
+    for i in range(batch_size):
+        print("softmax({:04.2f}) = {:04.2f}".format(x[0,i], y[0,i]))
