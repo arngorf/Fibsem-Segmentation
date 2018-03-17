@@ -38,6 +38,6 @@ def make_model(num_classes,
     model.add(Dropout(dense_dropout_p))
 
     model.add(Dense(num_classes))
-    model.add(Activation('tanh')) #softmax
+    model.add(Activation('sigmoid')) #softmax
 
     return model, name, input_shape
