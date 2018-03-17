@@ -3,7 +3,7 @@ from models import micro, mini, midi, conv_2_layer, conv_2_layer_pass_through
 from train import train_model
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] ="1"
+os.environ["CUDA_VISIBLE_DEVICES"] ="0"
 
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
@@ -146,7 +146,7 @@ def single_train():
 
     model, model_name, input_shape = train_params
 
-    model_name = model_name+'_softmax_activations'
+    model_name = model_name+'_tanh_activations'
 
     model_manager.new_model(model,
                             model_name,
