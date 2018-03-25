@@ -35,12 +35,12 @@ def make_model(num_classes,
     model.add(Activation('relu'))
     model.add(Dropout(conv_dropout_p))
 
-    model.add(Conv3D(32, (7, 7, 7), padding='valid'))
+    model.add(Conv3D(16, (7, 7, 7), padding='valid'))
     model.add(Activation('relu'))
     model.add(Dropout(conv_dropout_p))
 
     model.add(Flatten())
-    model.add(Dense(150))
+    model.add(Dense(50))
     model.add(Activation('relu'))
     model.add(Dropout(dense_dropout_p))
 
