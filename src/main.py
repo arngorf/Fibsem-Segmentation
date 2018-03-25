@@ -122,7 +122,7 @@ def single_train():
     #img_class_map = [[0], [1], [2]]
     num_classes = len(img_class_map)
     #norm_params = (142.1053396892233, 30.96410819657719)
-    norm_params = (126.10477250322636, 29.09183748256328)
+    norm_params = (126.04022903600975, 29.063149797089494)
 
     model_manager = ModelsManager(results_path)
 
@@ -183,7 +183,7 @@ def single_train():
                 batch_size,
                 iterations_per_epoch,
                 max_epochs,
-                avg_grad_stop=True,
+                avg_grad_stop=False,
                 avg_grad_n=32,
                 )
 

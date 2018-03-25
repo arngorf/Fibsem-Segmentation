@@ -22,11 +22,12 @@ def make_model(num_classes,
                               normalize=True,
                               rotation=True,
                               foveation=False,
+                              noise=True,
                               linear_deformation=False,
                               non_linear_resampling=True,
                               input_shape=k_input_shape,
                               target_shape=target_shape,
-                              force_use_in_test_phase=True,
+                              force_use_in_test_phase=False,
                               **kwargs)
 
     model.add(Cropping3D((5,5,5)))
