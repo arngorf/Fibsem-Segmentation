@@ -12,6 +12,6 @@ def make_model(num_classes,
 
     model = Sequential()
 
-    model = all_preprocessing(model, 'normalize', input_shape=k_input_shape, **kwargs)
+    model = all_preprocessing(model, normalize=True, input_shape=k_input_shape, **kwargs)
 
     return model, name, input_shape

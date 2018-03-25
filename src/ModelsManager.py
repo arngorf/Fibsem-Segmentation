@@ -6,10 +6,10 @@ import warnings
 UNCOMPILED_MODEL_FILENAME = 'base_model.h5'
 MODEL_CLASS_FILENAME = 'saved_model.p'
 
-from layers.RotationLayer import RotationLayer
+from layers.GeometricTransformationLayer import GeometricTransformationLayer
 from layers.FoveationLayer import FoveationLayer
 
-CUSTOM_OBJECTS = {'RotationLayer':RotationLayer,
+CUSTOM_OBJECTS = {'GeometricTransformationLayer':GeometricTransformationLayer,
                   'FoveationLayer':FoveationLayer,
                   }
 
@@ -429,12 +429,3 @@ class SavedModel():
     @property
     def epoch(self):
         return self._epoch
-
-
-'''
-custom_objects={'RotationLayer':RotationLayer, 'FoveationLayer':FoveationLayer}
-
-if load_model:
-    model_path = os.path.join(save_dir, load_model_name)
-    model = keras.models.load_model(model_path, custom_objects=custom_objects)
-'''

@@ -3,33 +3,40 @@ from keras.models import Sequential
 import keras
 import keras.backend as K
 from preprocessing import all_preprocessing
+from keras.layers import Cropping3D
 
 def make_model(num_classes,
-               conv_dropout_p=0.75,
-               dense_dropout_p=0.5,
-               name='conv_2_layer',
+               name='conv_2_layer_non_linear',
                **kwargs):
 
-    name = name + '_' + str(conv_dropout_p) + '_' + str(dense_dropout_p)
+    conv_dropout_p = 0.5
+    dense_dropout_p = 0.5
+
     input_shape = (25, 25, 25)
+    target_shape = (15, 15, 15)
     k_input_shape = (input_shape[0], input_shape[1], input_shape[2], 1)
 
     model = Sequential()
 
     model = all_preprocessing(model,
-                              ['normalize', 'rotation', 'noise'],
+                              normalize=True,
+                              rotation=True,
+                              foveation=False,
+                              linear_deformation=False,
+                              non_linear_resampling=True,
                               input_shape=k_input_shape,
-                              **kwargs,
-                              )
+                              target_shape=target_shape,
+                              force_use_in_test_phase=True,
+                              **kwargs)
 
-    model.add(Conv3D(48, (5, 5, 5), padding='valid'))
+    model.add(Cropping3D((5,5,5)))
+
+    model.add(Conv3D(16, (7, 7, 7), padding='valid'))
     model.add(Activation('relu'))
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(conv_dropout_p))
 
-    model.add(Conv3D(64, (4, 4, 4), padding='valid'))
+    model.add(Conv3D(32, (7, 7, 7), padding='valid'))
     model.add(Activation('relu'))
-    model.add(MaxPooling3D(pool_size=(2, 2, 2)))
     model.add(Dropout(conv_dropout_p))
 
     model.add(Flatten())

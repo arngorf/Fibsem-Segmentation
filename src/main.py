@@ -1,5 +1,5 @@
 import os
-from models import micro, mini, midi, conv_2_layer, conv_2_layer_pass_through
+from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_pass_through
 from train import train_model
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -121,7 +121,8 @@ def single_train():
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     #img_class_map = [[0], [1], [2]]
     num_classes = len(img_class_map)
-    norm_params = (142.1053396892233, 30.96410819657719)
+    #norm_params = (142.1053396892233, 30.96410819657719)
+    norm_params = (126.10477250322636, 29.09183748256328)
 
     model_manager = ModelsManager(results_path)
 
@@ -138,15 +139,19 @@ def single_train():
                                                         norm_params=norm_params,
                                                         )'''
 
-    train_params = conv_2_layer.make_model(num_classes,
+    '''train_params = conv_2_layer.make_model(num_classes,
                                            conv_dropout_p,
                                            dense_dropout_p,
                                            norm_params=norm_params,
-                                           )
+                                           )'''
+
+    train_params = conv_2_layer_non_linear.make_model(num_classes,
+                                                      norm_params=norm_params,
+                                                      )
 
     model, model_name, input_shape = train_params
 
-    model_name = model_name+'_sigmoid_activations'
+    #model_name = model_name+'_sigmoid_activations'
 
     model_manager.new_model(model,
                             model_name,

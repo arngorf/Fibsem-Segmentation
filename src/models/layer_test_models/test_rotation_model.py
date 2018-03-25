@@ -4,7 +4,7 @@ import keras.backend as K
 from preprocessing import all_preprocessing
 
 def make_model(num_classes,
-               name='test_affine',
+               name='test_rotate',
                **kwargs):
 
     input_shape = (25, 25, 25)
@@ -12,6 +12,6 @@ def make_model(num_classes,
 
     model = Sequential()
 
-    model = all_preprocessing(model, linear_deformation=True, input_shape=k_input_shape, force_use_in_test_phase=True, **kwargs)
+    model = all_preprocessing(model, rotation=True, input_shape=k_input_shape, force_use_in_test_phase=True, **kwargs)
 
     return model, name, input_shape
