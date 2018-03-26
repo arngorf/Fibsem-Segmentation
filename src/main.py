@@ -1,5 +1,5 @@
 import os
-from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_pass_through
+from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_non_linear_2, conv_2_layer_pass_through
 from train import train_model
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -145,7 +145,7 @@ def single_train():
                                            norm_params=norm_params,
                                            )'''
 
-    train_params = conv_2_layer_non_linear.make_model(num_classes,
+    train_params = conv_2_layer_non_linear_2.make_model(num_classes,
                                                       norm_params=norm_params,
                                                       )
 
@@ -162,6 +162,8 @@ def single_train():
 
     model_class = model_manager.get_model(model_name)
 
+    #model_class.session_summary()
+
     model_class.summary()
 
     input_shape = model_class.input_shape
@@ -176,7 +178,7 @@ def single_train():
                            )
 
     iterations_per_epoch=524288//2 #4096
-    max_epochs=64*2
+    max_epochs=64
 
     train_model(dataset,
                 model_class,

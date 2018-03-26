@@ -295,7 +295,7 @@ class FeatureClassImageQuery(object):
             i_list = []
             j_list = []
 
-            for k, label in enumerate(self.class_map):
+            for label in self.class_map:
 
                 j, i = np.where(segmented_img == label)
 
@@ -533,11 +533,9 @@ class PatchDataset(object):
         for class_idx in range(self._n_classes):
 
             # Sort out feature mappings
-            class_map = None
-
             if img_class_map == None:
                 class_map = [class_idx]
-            if img_class_map != None:
+            else:
                 class_map = img_class_map[class_idx]
 
             one_hot_encoding = np.zeros((1, self._n_classes), dtype = np.uint8)
