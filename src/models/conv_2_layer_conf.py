@@ -6,12 +6,12 @@ from preprocessing import all_preprocessing
 from keras.layers import Cropping3D
 
 def make_model(num_classes,
-               name='conv_2_layer_conf',
                rotation,
                foveation,
                noise,
                linear_deformation,
                non_linear_resampling,
+               name='conv_2_layer_conf',
                **kwargs):
 
     conv_dropout_p = 0.5
