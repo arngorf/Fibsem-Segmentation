@@ -1,5 +1,5 @@
 import os
-from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_non_linear_2, conv_2_layer_pass_through
+from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_non_linear_2, conv_2_layer_pass_through, conv_2_layer_conf
 from train import train_model
 from itertools import product
 from tqdm import tqdm
