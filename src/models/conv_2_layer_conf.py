@@ -6,42 +6,61 @@ from preprocessing import all_preprocessing
 from keras.layers import Cropping3D
 
 def make_model(num_classes,
-               name='conv_2_layer_non_linear',
+               name='conv_2_layer_conf',
+               rotation,
+               foveation,
+               noise,
+               linear_deformation,
+               non_linear_resampling,
                **kwargs):
 
     conv_dropout_p = 0.5
     dense_dropout_p = 0.5
 
-    input_shape = (25, 25, 25)
+    if non_linear_resampling:
+        input_shape = (25, 25, 25)
+    else:
+        input_shape = (15, 15, 15)
     target_shape = (15, 15, 15)
+
     k_input_shape = (input_shape[0], input_shape[1], input_shape[2], 1)
 
     model = Sequential()
 
+    if rotation:
+        name += '_rotation'
+    if foveation:
+        name += '_foveation'
+    if noise:
+        name += '_noise'
+    if linear_deformation:
+        name += '_linear_deformation'
+    if non_linear_resampling:
+        name += '_non_linear_resampling'
+
     model = all_preprocessing(model,
                               normalize=True,
-                              rotation=True,
-                              foveation=False,
-                              noise=True,
-                              linear_deformation=False,
-                              non_linear_resampling=True,
+                              rotation=rotation,
+                              foveation=foveation,
+                              noise=noise,
+                              linear_deformation=linear_deformation,
+                              non_linear_resampling=non_linear_resampling,
                               input_shape=k_input_shape,
                               target_shape=target_shape,
-                              force_use_in_test_phase=False,
                               **kwargs)
+    if non_linear_resampling:
+        model.add(Cropping3D((5,5,5)))
 
-    model.add(Cropping3D((5,5,5)))
-
-    model.add(Conv3D(16, (7, 7, 7), padding='valid'))
+    model.add(Conv3D(32, (7, 7, 7), padding='valid'))
     model.add(Activation('relu'))
     model.add(Dropout(conv_dropout_p))
 
-    model.add(Conv3D(16, (7, 7, 7), padding='valid'))
+    model.add(Conv3D(32, (7, 7, 7), padding='valid'))
     model.add(Activation('relu'))
     model.add(Dropout(conv_dropout_p))
 
     model.add(Flatten())
-    model.add(Dense(50))
+    model.add(Dense(100))
     model.add(Activation('relu'))
     model.add(Dropout(dense_dropout_p))
 

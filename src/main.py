@@ -1,6 +1,7 @@
 import os
 from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_non_linear_2, conv_2_layer_pass_through
 from train import train_model
+from itertools import product
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] ="3"
@@ -189,6 +190,69 @@ def single_train():
                 avg_grad_n=32,
                 )
 
+def preprocessing_effect():
+    #dataset_path = '../data/lausanne'
+    dataset_path = '/scratch/xkv467/lausanne'
+    #dataset_path = '../data/test_dataset'
+    results_path = '../results'
+    batch_size = 32
+    img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
+    #img_class_map = [[0], [1], [2]]
+    num_classes = len(img_class_map)
+    #norm_params = (142.1053396892233, 30.96410819657719)
+    norm_params = (126.04022903600975, 29.063149797089494)
+
+    model_manager = ModelsManager(results_path)
+
+    for rot, fovea, noise, linear, non_linear in tqdm(product([False, True], repeat=5)):
+
+        train_params = conv_2_layer_conf.make_model(num_classes,
+                                                    norm_params=norm_params,
+                                                    rot,
+                                                    fovea,
+                                                    noise,
+                                                    linear,
+                                                    non_linear,
+                                                    )
+
+        model, model_name, input_shape = train_params
+
+        model_manager.new_model(model,
+                                model_name,
+                                input_shape,
+                                num_classes,
+                                lr = 0.001, #0.001
+                                )
+
+        model_class = model_manager.get_model(model_name)
+
+        #model_class.session_summary()
+
+        model_class.summary()
+
+        input_shape = model_class.input_shape
+
+        model_class.set_session('default')
+
+        dataset = PatchDataset(dataset_path,
+                               batch_size,
+                               input_shape,
+                               img_class_map,
+                               norm_params=norm_params,
+                               )
+
+        iterations_per_epoch=524288//2 #4096
+        max_epochs=16
+
+        train_model(dataset,
+                    model_class,
+                    batch_size,
+                    iterations_per_epoch,
+                    max_epochs,
+                    avg_grad_stop=False,
+                    avg_grad_n=32,
+                    )
+
 def train_n_time(n):
     #dataset_path = '../data/lausanne'
     dataset_path = '/scratch/xkv467/lausanne'
@@ -251,5 +315,6 @@ if __name__ == '__main__':
 
     #mini_test()
     #dropbox_effect()
-    single_train()
+    #single_train()
+    preprocessing_effect()
     #train_n_time(3)
