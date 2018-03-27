@@ -207,12 +207,12 @@ def preprocessing_effect():
     for rot, fovea, noise, linear, non_linear in tqdm(product([False, True], repeat=5)):
 
         train_params = conv_2_layer_conf.make_model(num_classes,
-                                                    norm_params=norm_params,
                                                     rot,
                                                     fovea,
                                                     noise,
                                                     linear,
                                                     non_linear,
+                                                    norm_params=norm_params,
                                                     )
 
         model, model_name, input_shape = train_params
