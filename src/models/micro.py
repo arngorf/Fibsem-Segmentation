@@ -10,8 +10,13 @@ def make_model(num_classes, name='micro', **kwargs):
 
     model = Sequential()
 
-    #model = all_preprocessing(model, 'all', input_shape=k_input_shape, **kwargs)
-    model = all_preprocessing(model, ['normalize', 'noise'], input_shape=k_input_shape, **kwargs)
+    model = all_preprocessing(model,
+                              normalize=True,
+                              rotation=True,
+                              noise=True,
+                              input_shape=k_input_shape,
+                              **kwargs,
+                              )
 
     model.add(Flatten())
 

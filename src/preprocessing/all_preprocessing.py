@@ -20,13 +20,13 @@ def all_preprocessing(x, **kwargs):
 
         x = geometric_transformations(x, **kwargs)
 
-    if 'normalize' in kwargs:
+    if 'normalize' in kwargs and kwargs['normalize']:
         x = normalize(x, **kwargs)
 
-    if 'foveation' in kwargs:
+    if 'foveation' in kwargs and kwargs['foveation']:
         x = foveation(x, **kwargs)
 
-    if 'noise' in kwargs:
+    if 'noise' in kwargs and kwargs['noise']:
         x = noise(x, **kwargs)
 
     return x

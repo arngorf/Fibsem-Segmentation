@@ -5,7 +5,7 @@ from itertools import product
 from tqdm import tqdm
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] ="3"
+os.environ["CUDA_VISIBLE_DEVICES"] ="0"
 
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
@@ -147,11 +147,27 @@ def single_train():
                                            norm_params=norm_params,
                                            )'''
 
-    train_params = conv_2_layer_non_linear_2.make_model(num_classes,
+    '''train_params = conv_2_layer_non_linear_2.make_model(num_classes,
                                                       norm_params=norm_params,
-                                                      )
+                                                      )'''
+
+    rot = True
+    fovea = False
+    noise = False
+    linear = True
+    non_linear = False
+
+    train_params = conv_2_layer_conf.make_model(num_classes,
+                                                rot,
+                                                fovea,
+                                                noise,
+                                                linear,
+                                                non_linear,
+                                                norm_params=norm_params,
+                                                )
 
     model, model_name, input_shape = train_params
+    model_name = 'long_conv_2_layer'
 
     #model_name = model_name+'_sigmoid_activations'
 
@@ -179,8 +195,8 @@ def single_train():
                            norm_params=norm_params,
                            )
 
-    iterations_per_epoch=524288//2 #4096
-    max_epochs=64
+    iterations_per_epoch= 524288//2
+    max_epochs=64*2
 
     train_model(dataset,
                 model_class,
@@ -188,7 +204,7 @@ def single_train():
                 iterations_per_epoch,
                 max_epochs,
                 avg_grad_stop=False,
-                avg_grad_n=32,
+                avg_grad_n=16,
                 )
 
 def preprocessing_effect():
@@ -316,6 +332,6 @@ if __name__ == '__main__':
 
     #mini_test()
     #dropbox_effect()
-    #single_train()
-    preprocessing_effect()
+    single_train()
+    #preprocessing_effect()
     #train_n_time(3)

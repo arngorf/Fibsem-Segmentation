@@ -31,7 +31,7 @@ def geometric_transformations(x, **kwargs):
                                          )
 
     if 'functional_api' in kwargs and kwargs['functional_api'] == True:
-        result = layer(x)
+        x = layer(x)
     else:
         x.add(layer)
 
