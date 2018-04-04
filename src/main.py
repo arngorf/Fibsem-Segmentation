@@ -5,7 +5,7 @@ from itertools import product
 from tqdm import tqdm
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] ="0"
+os.environ["CUDA_VISIBLE_DEVICES"] ="3"
 
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
