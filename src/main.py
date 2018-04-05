@@ -148,7 +148,7 @@ def dropbox_and_preprocessing_effect():
                                                        linear,
                                                        conv_dropout_p,
                                                        dense_dropout_p,
-                                                       norm_params,
+                                                       norm_params=norm_params,
                                                        )
 
                 model, model_name, input_shape = train_params
