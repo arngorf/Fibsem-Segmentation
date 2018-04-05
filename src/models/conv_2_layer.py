@@ -21,10 +21,14 @@ def make_model(num_classes,
     model = Sequential()
 
     model = all_preprocessing(model,
-                              ['normalize', 'rotation', 'noise'],
+                              normalize=True,
+                              rotation=rotation,
+                              foveation=foveation,
+                              noise=noise,
+                              linear_deformation=linear_deformation,
+                              non_linear_resampling=False,
                               input_shape=k_input_shape,
-                              **kwargs,
-                              )
+                              **kwargs)
 
     model.add(Conv3D(48, (5, 5, 5), padding='valid'))
     model.add(Activation('relu'))
