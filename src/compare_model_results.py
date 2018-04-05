@@ -53,5 +53,24 @@ def compare_all():
 
     plt.show()
 
+def plot_single(model_name):
+    results_path = '../results'
+
+    model_manager = ModelsManager(results_path)
+
+    saved_model = model_manager.get_model(model_name)
+
+    for session_name in saved_model.sessions:
+        epoch, train, test = saved_model.session_stats(session_name)
+
+        plt.title(model_name)
+
+        plt.plot(epoch, test, label=session_name)
+        plt.ylim(0,1)
+
+    plt.legend()
+
 if __name__ == '__main__':
-    compare_all()
+    #compare_all()
+    plot_single('long_conv_2_layer')
+    plt.show()

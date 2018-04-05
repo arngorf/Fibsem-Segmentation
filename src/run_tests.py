@@ -25,7 +25,7 @@ custom_objects={'GeometricTransformationLayer':GeometricTransformationLayer,
 
 if __name__ == '__main__':
 
-    #validate_output_manually()
+    validate_output_manually()
     #validate_test_output_manually()
     #benchmark_dataset(25000)
     #benchmark_test_dataset(25000)
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     #test_affine_layer(4)
     #test_rotation_layer(4)
     #test_non_linear_layer(4)
-    test_all_layers(8)
+    #test_all_layers(8)
     #test_noise_layer()
     #test_softmax_layer()
 

@@ -5,6 +5,10 @@ import keras.backend as K
 from preprocessing import all_preprocessing
 
 def make_model(num_classes,
+               rotation=True,
+               foveation=True,
+               noise=True,
+               linear_deformation=True,
                conv_dropout_p=0.75,
                dense_dropout_p=0.5,
                name='conv_2_layer',

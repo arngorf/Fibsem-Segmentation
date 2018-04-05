@@ -49,8 +49,8 @@ def validate_output_manually():
     print(y)
 
     x = x.reshape(32, 45, 45, 45)
-    x[:,45//2,:,:] = dataset_mean
-    x[:,:,45//2,:] = dataset_mean
+    x[:,45//2,[0,1,2,3,4,5,44,43,42,41,40,39],:] = np.max(x)
+    x[:,[0,1,2,3,4,5,44,43,42,41,40,39],45//2,:] = np.max(x)
 
     import matplotlib.pyplot as plt
 
