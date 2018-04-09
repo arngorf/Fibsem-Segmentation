@@ -372,7 +372,7 @@ class ModelClass():
     @property
     def model(self):
         if self._model == None:
-            self._model = self.load_model('latest', 'base')
+            self.load_model('latest', 'base')
         return self._model
 
     @property
