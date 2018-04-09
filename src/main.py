@@ -447,6 +447,6 @@ if __name__ == '__main__':
     #single_train()
     #preprocessing_effect()
     #train_n_time(3)
-    predict_single_image(400)
-    time.sleep(10)
+    #predict_single_image(400)
+    #time.sleep(10)
     dropbox_and_preprocessing_effect()
