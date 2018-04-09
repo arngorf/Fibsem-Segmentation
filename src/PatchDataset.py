@@ -847,31 +847,22 @@ class PatchDataset(object):
 
     def process_unlabeled_image(self, img):
 
-        if len(img.shape) != 3:
-            return
-
         d, h, w = img.shape
 
-        pad_k = self._feature_shape[0] // 2
         pad_j = self._feature_shape[1] // 2
         pad_i = self._feature_shape[2] // 2
 
-        img = np.pad(img,
-                     [ (pad_k, pad_k),
-                       (pad_j, pad_j),
-                       (pad_i, pad_i) ],
-                     mode='reflect')
+        I = np.pad(img,[0, pad_j, pad_i ], mode='reflect')
 
-        #for k in range(d):
-        for k in [pad_k+img.shape[0]//2]:
-            for j in range(pad_j, h+pad_j):
-                for i in range(pad_i, w+pad_i):
+        for j in tqdm(range(h)):
+            for i in range(w):
 
-                    x = img[k-pad_k:k+pad_k+1,
-                            j-pad_j:j+pad_j+1,
-                            i-pad_i:i+pad_i+1]
+                ii = i + pad_i
+                jj = j + pad_j
 
-                    yield x, k-pad_k, j-pad_j, i-pad_i
+                x = img[:, jj - h//2:jj + w//2 + 1, ii - w//2:ii + w//2 + 1]
+
+                yield x, j, i
 
 class SparseImageSegmentation(object):
 

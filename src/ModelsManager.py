@@ -2,6 +2,7 @@ import keras
 import os
 import pickle
 import warnings
+from time import time
 
 UNCOMPILED_MODEL_FILENAME = 'base_model.h5'
 MODEL_CLASS_FILENAME = 'saved_model.p'
@@ -40,7 +41,7 @@ class ModelsManager():
                  )
 
     def __init__(self, results_path=None):
-
+        print('__init__::Begin')
         self._models = {}
 
         if results_path == None:
@@ -49,6 +50,7 @@ class ModelsManager():
             self._results_path = results_path
 
         self._load_models()
+        print('__init__::End')
 
     def _load_models(self):
         directory = os.fsencode(self._results_path)
@@ -68,16 +70,14 @@ class ModelsManager():
             def callback():
                 self.new_checkpoint_callback(name)
 
-            #model_class.load_model()
             model_class.set_model_callback(callback)
 
             model_class.set_model_path(os.path.join(self._results_path,
                                                     model_dir))
-            #model_class.session_summary()
-            #exit()
-            model_class.load_model('latest', 'base')
+            #model_class.load_model('latest', 'base')
 
             self._models[name] = model_class
+
 
     def new_model(self, model, name, input_shape, output_shape, **kwargs):
 
@@ -131,6 +131,9 @@ class ModelsManager():
     @property
     def models(self):
         return self._models.keys()
+
+    def has_model(self, model_name):
+        return model_name in self._models
 
 
 
@@ -222,8 +225,6 @@ class ModelClass():
         else:
 
             self._opt = 'sgd'#
-
-        self.load_model('latest', 'base')
 
     def _get_opt(self, **kwargs):
 
@@ -370,6 +371,8 @@ class ModelClass():
 
     @property
     def model(self):
+        if self._model == None:
+            self._model = self.load_model('latest', 'base')
         return self._model
 
     @property

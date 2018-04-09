@@ -1,8 +1,10 @@
 import os
 from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_non_linear_2, conv_2_layer_pass_through, conv_2_layer_conf
 from train import train_model
+from test import test_model
 from itertools import product
 from tqdm import tqdm
+import time
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] ="3"
@@ -127,19 +129,19 @@ def dropbox_and_preprocessing_effect():
 
     model_manager = ModelsManager(results_path)
 
-    conv_dropout_p_list = [0.35, 0.5, 0.65]
-    dense_dropout_p_list = [0.35, 0.5, 0.65]
+    conv_dropout_p_list = [0.0] #[0.35, 0.5, 0.65]
+    dense_dropout_p_list = [0.0] #[0.35, 0.5, 0.65]
 
     for conv_dropout_p in conv_dropout_p_list:
         for dense_dropout_p in dense_dropout_p_list:
-            for preprocessing_idx in range(3):
+            for preprocessing_idx in range(4):
 
-                pp = [False, False, False]
+                pp = [False, False, False, False]
                 pp[preprocessing_idx] = True
 
                 noise = False
-                rot, fovea, linear = pp
-                pp_affix = ['rot', 'fovea', 'linear'][preprocessing_idx]
+                none, rot, fovea, linear = pp
+                pp_affix = ['none', 'rot', 'fovea', 'linear'][preprocessing_idx]
 
                 train_params = conv_2_layer.make_model(num_classes,
                                                        rot,
@@ -402,6 +404,42 @@ def train_n_time(n):
                     avg_grad_n=16,
                     )
 
+def predict_single_image(img_number):
+
+    #dataset_path = '../data/lausanne'
+    dataset_path = '/scratch/xkv467/lausanne'
+    #dataset_path = '../data/test_dataset'
+    results_path = '../results'
+    batch_size = 32
+    img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
+
+    num_classes = len(img_class_map)
+
+    norm_params = (126.04022903600975, 29.063149797089494)
+
+    model_manager = ModelsManager(results_path)
+
+    saved_model = model_manager.get_model('conv_2_layer_fovea_0.5_0.35')
+    saved_model.load_model('latest', 'best')
+    model = saved_model.model
+    input_shape = saved_model.input_shape
+
+    dataset = PatchDataset(dataset_path,
+                           batch_size,
+                           input_shape,
+                           img_class_map,
+                           norm_params=norm_params,
+                           )
+
+    # consistency test:
+    # Does model produce the same test acc as expected two times in a row?
+
+    for i in range(2):
+        test_acc = test_model(dataset, model)
+        print('test_acc:', test_acc)
+
+    #predict_image(dataset, model, image)
+
 if __name__ == '__main__':
 
     #mini_test()
@@ -409,4 +447,6 @@ if __name__ == '__main__':
     #single_train()
     #preprocessing_effect()
     #train_n_time(3)
+    predict_single_image(400)
+    time.sleep(10)
     dropbox_and_preprocessing_effect()
