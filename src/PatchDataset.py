@@ -386,8 +386,6 @@ class PatchDataset(object):
                  '_test_segmentations',
                  '_new_image_probability',
                  'number_of_available_batches',
-                 '_mean',
-                 '_std',
                  '_feature_classes',
                  'fetch_results_cond',
                  'fetch_results',
@@ -461,7 +459,6 @@ class PatchDataset(object):
                           'post_processing_dir',
                           'new_image_probability',
                           'number_of_available_batches',
-                          'norm_params',
                           }
 
         for kwarg in kwargs:
@@ -514,14 +511,6 @@ class PatchDataset(object):
         else:
 
             self.number_of_available_batches = 4
-
-        if 'norm_params' in kwargs:
-
-            self._mean, self._std = kwargs['norm_params']
-
-        else:
-
-            self._mean, self._std = self._calculate_normalization_params()
 
         self._test_segmentations = self._get_image_indices_with_class_list(self._test_params)
 
@@ -767,9 +756,8 @@ class PatchDataset(object):
             for image_label in image_labels:
                 reverse_class_map[image_label] = used_label
 
-        for sparseSegmentations in segmentations:
+        for sparseSegmentation in segmentations[0]:
 
-            sparseSegmentation = sparseSegmentations[0]
             segmentation_path = sparseSegmentation.segmentation_path
             image_paths = sparseSegmentation.image_paths
             bounds = sparseSegmentation.bounds
@@ -810,40 +798,37 @@ class PatchDataset(object):
 
             j, i = np.where(segmented_img != NO_LABEL)
 
-            cur_idx = 0
+            num_indices = i.shape[0]
 
-            total_batches = i.shape[0]//32
             kkk = self._feature_shape[0]//2
 
-            if max_batches != None:
-                total_batches = min(total_batches, max_batches)
+            batch = []
+            batch_i = []
+            batch_j = []
 
-            for batch_idx in range(total_batches):
+            for idx in range(num_indices):
 
-                progress = (batch_idx+1) / (total_batches)
+                cur_j = j[idx]
+                cur_i = i[idx]
 
-                ii = i[cur_idx:cur_idx + batch_size]
-                jj = j[cur_idx:cur_idx + batch_size]
-
-                x = []
-
-                for idx in range(batch_size):
-
-                    jjj = jj[idx]
-                    iii = ii[idx]
-
-                    x.append(image[:,
-                                   jjj-pad_j:jjj+pad_j+1,
-                                   iii-pad_i:iii+pad_i+1],
+                batch.append(image[:,
+                                   cur_j-pad_j:cur_j+pad_j+1,
+                                   cur_i-pad_i:cur_i+pad_i+1],
                                    )
+                batch_i.append(cur_i)
+                batch_j.append(cur_j)
 
-                x = np.stack(x, axis=0)
-                #print(segmented_img[jj, ii])
-                y = reverse_mapper(segmented_img[jj, ii])
-                #print(y)
-                cur_idx += batch_size
+                if len(batch) == batch_size or idx == num_indices - 1:
 
-                yield x, y, progress
+                    x = np.stack(batch)
+                    cur_batch_size = len(batch)
+                    y = reverse_mapper(segmented_img[batch_j, batch_i])
+
+                    batch = []
+                    batch_i = []
+                    batch_j = []
+
+                    yield x, y, cur_batch_size
 
     def process_unlabeled_image(self, img):
 

@@ -3,7 +3,7 @@ from keras.models import Sequential
 
 from preprocessing import all_preprocessing
 
-def make_model(num_classes, name='micro', **kwargs):
+def make_model(num_classes, **kwargs):
 
     input_shape = (25, 25, 25)
     k_input_shape = (input_shape[0], input_shape[1], input_shape[2], 1)
@@ -23,4 +23,4 @@ def make_model(num_classes, name='micro', **kwargs):
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
 
-    return model, name, input_shape
+    return model, input_shape

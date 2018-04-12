@@ -168,6 +168,17 @@ if __name__ == '__main__':
             plt.ylim(0.5,1)
             plt.legend()
 
+    plt.subplot(2, 4, 8)
+    for pp in ['rot', 'fovea', 'linear']:
+        name = 'conv_2_layer_none_0.0_0.0'
+
+        all_model_names.append(name)
+
+    '''plot_specific([name])
+    plt.title('CDP: 0.0, DDP: 0.0')
+    plt.ylim(0.5,1)
+    plt.legend()'''
+
     plt.show()
 
     plot_bar_chart_average_success(all_model_names)

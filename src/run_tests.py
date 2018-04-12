@@ -1,5 +1,6 @@
 from tests.dataset_tests import *
 from tests.layer_tests import *
+from tests.model_manager_tests import *
 from PatchDataset import PatchDataset
 from test import test_model
 import keras
@@ -25,7 +26,7 @@ custom_objects={'GeometricTransformationLayer':GeometricTransformationLayer,
 
 if __name__ == '__main__':
 
-    validate_output_manually()
+    #validate_output_manually()
     #validate_test_output_manually()
     #benchmark_dataset(25000)
     #benchmark_test_dataset(25000)
@@ -38,4 +39,7 @@ if __name__ == '__main__':
     #test_all_layers(8)
     #test_noise_layer()
     #test_softmax_layer()
+    #test_train_model_again()
 
+    test_acc_matches_stored_test_acc()
+    #validate_test_consistency_2()

@@ -28,6 +28,7 @@ def geometric_transformations(x, **kwargs):
                                          non_linear_resampling,
                                          target_shape,
                                          force_use_in_test_phase,
+                                         name='pp_geom'
                                          )
 
     if 'functional_api' in kwargs and kwargs['functional_api'] == True:

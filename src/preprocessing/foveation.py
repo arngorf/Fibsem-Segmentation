@@ -2,7 +2,7 @@ from layers.FoveationLayer import FoveationLayer
 
 def foveation(x, **kwargs):
 
-    layer = FoveationLayer()
+    layer = FoveationLayer(name='Foveation')
 
     if 'functional_api' in kwargs and kwargs['functional_api'] == True:
         x = layer(x)

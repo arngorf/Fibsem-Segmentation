@@ -8,7 +8,9 @@ def all_preprocessing(x, **kwargs):
 
     if 'input_shape' in kwargs:
         input_shape = kwargs['input_shape']
-        reshape_layer = Reshape(input_shape, input_shape=input_shape)
+        reshape_layer = Reshape(input_shape,
+                                input_shape=input_shape,
+                                name='pp_reshape')
         if 'functional_api' in kwargs and kwargs['functional_api'] == True:
             x = reshape_layer(x)
         else:

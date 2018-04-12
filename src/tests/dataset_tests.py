@@ -2,21 +2,18 @@ from PatchDataset import PatchDataset
 import numpy as np
 from tqdm import tqdm
 
-
-
 def dataset_real():
     dataset_dir = '../data/lausanne'
     batch_size = 32
     feature_shape = (45, 45, 45)
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1, 2]]
-    dataset_mean = 142.1053396892233
-    dataset_std = 30.96410819657719
+    norm_params = (126.04022903600975, 29.063149797089494)
 
     dataset = PatchDataset(dataset_dir,
                             batch_size,
                             feature_shape,
                             img_class_map,
-                            norm_params=(dataset_mean, dataset_std))
+                            norm_params=norm_params)
 
     return dataset
 
@@ -163,3 +160,54 @@ def validate_train_test():
                 plt.subplot(3,25,j+51)
                 plt.imshow(diff, cmap='gray')
             plt.show()
+
+def validate_test_consistency():
+
+    examples = {}
+
+    dataset = dataset_real()
+
+    batch_size = 32
+    for x, y, cur_batch_size in tqdm(dataset.test_data_stream(batch_size)): #, iterations
+
+        for i in range(cur_batch_size):
+            val = y[i]
+            key = hash(tuple(x[i,...].flatten()))
+            if key in examples:
+                stored_val = examples[key]
+                if stored_val != val:
+                    print('duplicate within dataset')
+            else:
+                examples[key] = val
+
+    for _ in tqdm(range(10)):
+        dataset = dataset_real()
+
+        batch_size = 32
+        for x, y, cur_batch_size in tqdm(dataset.test_data_stream(batch_size)): #, iterations
+
+            for i in range(cur_batch_size):
+                val = y[i]
+                key = hash(tuple(x[i,...].flatten()))
+                if key in examples:
+                    stored_val = examples[key]
+                    if stored_val != val:
+                        print('value did not match')
+                else:
+                    print('new value')
+                    examples[key] = val
+
+
+def validate_test_consistency_2():
+
+
+    for _ in range(8):
+        dataset = dataset_real()
+
+        batch_size = 32
+        total = 0
+        for x, y, cur_batch_size in tqdm(dataset.test_data_stream(batch_size)):
+            total += cur_batch_size
+
+        print('total', total)
+

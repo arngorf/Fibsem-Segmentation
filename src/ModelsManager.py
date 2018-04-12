@@ -3,6 +3,7 @@ import os
 import pickle
 import warnings
 from time import time
+from models import micro, mini, midi, conv_2_layer
 
 UNCOMPILED_MODEL_FILENAME = 'base_model.h5'
 MODEL_CLASS_FILENAME = 'saved_model.p'
@@ -13,6 +14,11 @@ from layers.FoveationLayer import FoveationLayer
 CUSTOM_OBJECTS = {'GeometricTransformationLayer':GeometricTransformationLayer,
                   'FoveationLayer':FoveationLayer,
                   }
+
+model_dict = {'micro':micro,
+              'mini': mini,
+              'midi': midi,
+              'conv_2_layer': conv_2_layer}
 
 def topology_is_equal(model_a, model_b):
 
@@ -41,7 +47,7 @@ class ModelsManager():
                  )
 
     def __init__(self, results_path=None):
-        print('__init__::Begin')
+
         self._models = {}
 
         if results_path == None:
@@ -50,7 +56,6 @@ class ModelsManager():
             self._results_path = results_path
 
         self._load_models()
-        print('__init__::End')
 
     def _load_models(self):
         directory = os.fsencode(self._results_path)
@@ -65,56 +70,44 @@ class ModelsManager():
 
             model_class = pickle.load(open(model_class_path, "rb"))
 
-            name = model_class.name
+            model_id = model_class.model_id
 
             def callback():
-                self.new_checkpoint_callback(name)
+                self.new_checkpoint_callback(model_id)
 
             model_class.set_model_callback(callback)
 
             model_class.set_model_path(os.path.join(self._results_path,
                                                     model_dir))
-            #model_class.load_model('latest', 'base')
 
-            self._models[name] = model_class
+            self._models[model_id] = model_class
 
+    def new_model(self, model_type, model_id, **model_params):
 
-    def new_model(self, model, name, input_shape, output_shape, **kwargs):
+        if model_id in self._models:
+            return
 
-        if name in self._models:
-            existing_model_class = self._models[name]
-            existing_model = existing_model_class.model
-            if not topology_is_equal(model, existing_model):
-                err_msg = "Model with name '" + name + "' already exists, " + \
-                          "but the topology differs"
-                raise ValueError(err_msg)
-
-            return # model already exists
-
-        model_class = ModelClass(model,
-                                 name,
+        model_class = ModelClass(model_type,
+                                 model_id,
                                  self._results_path,
-                                 input_shape,
-                                 output_shape,
-                                 **kwargs)
+                                 **model_params)
 
         def callback():
-            self.new_checkpoint_callback(name)
+            self.new_checkpoint_callback(model_id)
 
         model_class.set_model_callback(callback)
 
-        self._models[name] = model_class
+        self._models[model_id] = model_class
 
         callback()
 
-    def get_model(self, name):
-        return self._models[name]
+    def get_model(self, model_id):
+        return self._models[model_id]
 
     def new_checkpoint_callback(self, model_id):
 
         model_class = self._models[model_id]
 
-        model = model_class.pop_current_model()
         callback = model_class.pop_model_callback()
 
         model_dir = model_class.model_dir
@@ -125,26 +118,24 @@ class ModelsManager():
 
         pickle.dump(model_class, open(model_class_path, "wb"))
 
-        model_class.set_current_model(model)
         model_class.set_model_callback(callback)
 
     @property
     def models(self):
         return self._models.keys()
 
-    def has_model(self, model_name):
-        return model_name in self._models
+    def has_model(self, model_id):
+        return model_id in self._models
 
 
 
 class ModelClass():
 
-    __slots__ = ('_model',
-                 '_name',
+    __slots__ = ('_model_type',
+                 '_model_id',
                  '_model_dir',
                  '_base_model_path',
-                 '_sessions',
-                 '_session',
+                 '_saved_models_list',
                  '_save_model_callback',
                  '_loss',
                  '_opt',
@@ -153,28 +144,25 @@ class ModelClass():
                  '_lr_decay',
                  '_epoch',
                  '_input_shape',
-                 '_output_shape',
+                 '_output_size',
+                 '_norm_params',
+                 '_model_params',
                  )
 
     def __init__(self,
-                 model,
-                 name,
+                 model_type,
+                 model_id,
                  results_path,
-                 input_shape,
-                 output_shape,
                  **kwargs):
 
-        self._model = model
-        self._name = name
-        self._model_dir = os.path.join(results_path, name)
+        self._model_type = model_type
+        self._model_id = model_id
+        self._model_dir = os.path.join(results_path, model_id)
         self._base_model_path = os.path.join(self._model_dir, 'base_model.h5')
         self._epoch = 0
-        self._input_shape = input_shape
-        self._output_shape = output_shape
+        self._input_shape = None
 
-        self._sessions = {}
-        self._session = 'default'
-        self._sessions[self._session] = []
+        self._saved_models_list = []
 
         if os.path.isdir(self._model_dir):
             err_msg = "Model already exists:'" + self._model_dir + "'"
@@ -186,14 +174,26 @@ class ModelClass():
                           'init_lr',
                           'lr',
                           'decay',
+                          'normalize',
+                          'foveation',
+                          'linear_deformation',
+                          'rotation',
+                          'noise',
+                          'conv_dropout_p',
+                          'dense_dropout_p',
+                          'norm_params',
+                          'output_size',
                           }
 
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
                 raise TypeError('Keyword argument not understood:', kwarg)
 
+        self._model_params = kwargs
+        self._output_size = kwargs['output_size']
+        self._norm_params = kwargs['norm_params']
+
         os.makedirs(self._model_dir)
-        self._model.save(self._base_model_path)
 
         if 'loss' in kwargs:
             self._loss = kwargs['loss']
@@ -237,65 +237,70 @@ class ModelClass():
             return keras.optimizers.Adam(lr=self._init_lr,
                                          decay=self._lr_decay) #, clipnorm=1.0
 
-    def load_model(self, session_name='latest', which='latest'):
+    def load_model(self, which='latest'):
 
-        if session_name == 'latest':
-            session_name = self._session #self._latest_session
+        if len(self._saved_models_list) == 0:
+            which = 'base'
+
+        if isinstance(which, int):
+            for saved_model in self._saved_models_list:
+                if saved_model.epoch == which:
+                    load_path = os.path.join(self._model_dir,
+                                             saved_model.filename)
+                    break
         else:
-            session_name = session
+            if which == 'base':
+                load_path = self._base_model_path
+            elif which == 'latest':
+                saved_model = self._saved_models_list[-1]
+                load_path = os.path.join(self._model_dir,
+                                         saved_model.filename)
+            elif which == 'best':
+                saved_model = max(self._saved_models_list, key=lambda sm: sm.test_acc)
+                load_path = os.path.join(self._model_dir,
+                                         saved_model.filename)
 
-        saved_models_list = self._sessions[session_name]
+        model_generator = model_dict[self._model_type]
 
-        if which == 'base':
-            load_path = self._base_model_path
-        elif which == 'latest':
-            saved_model = saved_models_list[-1]
-            load_path = os.path.join(self._model_dir,
-                                     session_name,
-                                     saved_model.name)
-        elif which == 'best':
-            saved_model = max(saved_models_list, key=lambda sm: sm.test_acc)
-            load_path = os.path.join(self._model_dir,
-                                     session_name,
-                                     saved_model.name)
+        params = model_generator.make_model(self._output_size,
+                                            **self._model_params)
 
-        if which == 'base':
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                self._model = keras.models.load_model(load_path,
-                                                      custom_objects=CUSTOM_OBJECTS)
+        model, self._input_shape = params
 
-            opt = self._get_opt()
-            self._model.compile(loss=self._loss,
-                                optimizer=opt,
-                                metrics=self._metrics,
-                                )
+        opt = self._get_opt()
 
+        model.compile(loss=self._loss,
+                      optimizer=opt,
+                      metrics=self._metrics,
+                      )
+
+        if not which == 'base':
+            model.load_weights(load_path)
+
+        return model
+
+    def save_model(self, model, train_acc, test_acc, epoch, **kwargs):
+
+        if 'change_epoch' in kwargs:
+            change_epoch = kwargs['change_epoch']
         else:
-            self._model = keras.models.load_model(load_path,
-                                                  custom_objects=CUSTOM_OBJECTS)
+            change_epoch = True
 
-    def save_model(self, model, train_acc, test_acc, epoch, session_name):
+        if not os.path.isdir(self._model_dir):
+            os.makedirs(self._model_dir)
 
-        session_dir = os.path.join(self._model_dir, session_name)
+        model_filename = 'epoch_' + str(epoch) + '.h5'
 
-        if not os.path.isdir(session_dir):
-            os.makedirs(session_dir)
+        model_path = os.path.join(self._model_dir, model_filename)
 
-        model_name = 'epoch_' + str(epoch) + '.h5'
+        model.save_weights(model_path)
 
-        model_path = os.path.join(session_dir, model_name)
+        saved_model = SavedModel(model_filename, train_acc, test_acc, epoch)
 
-        model.save(model_path)
+        self._saved_models_list.append(saved_model)
 
-        saved_model = SavedModel(model_name, train_acc, test_acc, epoch)
-
-        if not session_name in self._sessions:
-            self._sessions[session_name] = [saved_model]
-        else:
-            self._sessions[session_name].append(saved_model)
-
-        self._epoch = epoch
+        if change_epoch:
+            self._epoch = epoch
 
         self._save_model_callback()
 
@@ -323,14 +328,10 @@ class ModelClass():
         self._model_dir = model_path
         self._base_model_path = os.path.join(self._model_dir, 'base_model.h5')
 
-    def set_session(self, session_name):
-        self._session = session_name
-        self._epoch = len(self._sessions[self._session])
-
     def summary(self):
 
         print('___Model Summary___')
-        print('name:', self._name)
+        print('model id:', self._model_id)
         print('loss:', self._loss)
         print('opt:', type(self._opt).__name__)
         print('metrics:', self._metrics)
@@ -340,24 +341,22 @@ class ModelClass():
         for layer in self._model.layers:
             print(layer.get_output_at(0).get_shape().as_list())
 
-    def session_summary(self, session_name='default'):
+    def session_summary(self):
 
-        saved_model_list = self._sessions[session_name]
-
-        print('Model:', self._name, 'session:', self.session, 'summary:')
-        for saved_model in saved_model_list:
+        print('Model:', self._model_id, 'session:', self.session, 'summary:')
+        for saved_model in self._saved_models_list:
             msg =  'Epoch {:d}, '.format(saved_model.epoch)
             msg += 'train acc: {:04.2f}, '.format(saved_model.train_acc)
             msg += 'test acc: {:04.2f}, '.format(saved_model.test_acc)
             print(msg)
 
-    def session_stats(self, session_name='default'):
-        saved_model_list = self._sessions[session_name]
+    def session_stats(self):
 
         stats = [(m.epoch,
                   m.train_acc,
                   m.test_acc,
-                  ) for m in saved_model_list]
+                  ) for m in self._saved_models_list]
+        print(stats)
         epoch, train_acc, test_acc = zip(*stats)
         return epoch, train_acc, test_acc
 
@@ -366,52 +365,45 @@ class ModelClass():
         return self._model_dir
 
     @property
-    def name(self):
-        return self._name
+    def model_id(self):
+        return self._model_id
 
     @property
     def model(self):
-        if self._model == None:
-            self.load_model('latest', 'base')
-        return self._model
+        model = self.load_model()
+        return model
 
     @property
     def next_epoch(self):
         return self._epoch + 1
 
     @property
-    def session(self):
-        return self._session
-
-    @property
-    def sessions(self):
-        return self._sessions.keys()
-
-    @property
     def input_shape(self):
+        if self._input_shape == None:
+            self.load_model()
         return self._input_shape
 
     @property
-    def output_shape(self):
-        return self._output_shape
+    def output_size(self):
+        return self._output_size
 
 class SavedModel():
 
-    __slots__ = ('_name',
+    __slots__ = ('_filename',
                  '_test_acc',
                  '_train_acc',
                  '_epoch',
                  )
 
-    def __init__(self, name, train_acc, test_acc, epoch):
-        self._name = name
+    def __init__(self, filename, train_acc, test_acc, epoch):
+        self._filename = filename
         self._test_acc = test_acc
         self._train_acc = train_acc
         self._epoch = epoch
 
     @property
-    def name(self):
-        return self._name
+    def filename(self):
+        return self._filename
 
     @property
     def test_acc(self):

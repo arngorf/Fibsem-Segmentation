@@ -1,5 +1,4 @@
 import os
-from models import micro, mini, midi, conv_2_layer, conv_2_layer_non_linear, conv_2_layer_non_linear_2, conv_2_layer_pass_through, conv_2_layer_conf
 from train import train_model
 from test import test_model
 from itertools import product
@@ -7,7 +6,7 @@ from tqdm import tqdm
 import time
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] ="3"
+os.environ["CUDA_VISIBLE_DEVICES"] ="0"
 
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
@@ -17,13 +16,13 @@ def mini_test():
     results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
-    num_classes = len(img_class_map)
+    output_size = len(img_class_map)
     norm_params = (142.1053396892233, 30.96410819657719)
 
     model_manager = ModelsManager(results_path)
 
 
-    train_params = mini.make_model(num_classes,
+    train_params = mini.make_model(output_size,
                                    norm_params=norm_params,
                                    )
 
@@ -32,7 +31,7 @@ def mini_test():
     model_manager.new_model(model,
                             model_name,
                             input_shape,
-                            num_classes,
+                            output_size,
                             lr = 0.0001,
                             )
 
@@ -67,7 +66,7 @@ def dropbox_effect():
     results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
-    num_classes = len(img_class_map)
+    output_size = len(img_class_map)
     #norm_params = (142.1053396892233, 30.96410819657719)
     norm_params = (126.04022903600975, 29.063149797089494)
 
@@ -79,7 +78,7 @@ def dropbox_effect():
     for conv_dropout_p in conv_dropout_p_list:
         for dense_dropout_p in dense_dropout_p_list:
 
-            train_params = conv_2_layer.make_model(num_classes,
+            train_params = conv_2_layer.make_model(output_size,
                                                    conv_dropout_p=conv_dropout_p,
                                                    dense_dropout_p=dense_dropout_p,
                                                    norm_params=norm_params,
@@ -90,7 +89,7 @@ def dropbox_effect():
             model_manager.new_model(model,
                                     model_name,
                                     input_shape,
-                                    num_classes,
+                                    output_size,
                                     lr = 0.001,
                                     )
 
@@ -118,77 +117,65 @@ def dropbox_effect():
                         )
 
 def dropbox_and_preprocessing_effect():
-    #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '../data/lausanne'
+    #dataset_path = '/scratch/xkv467/lausanne'
     results_path = '../results'
     batch_size = 32
-    img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
-    num_classes = len(img_class_map)
-    #norm_params = (142.1053396892233, 30.96410819657719)
+    #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
+    img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
+    output_size = len(img_class_map)
     norm_params = (126.04022903600975, 29.063149797089494)
 
     model_manager = ModelsManager(results_path)
 
-    conv_dropout_p_list = [0.0] #[0.35, 0.5, 0.65]
-    dense_dropout_p_list = [0.0] #[0.35, 0.5, 0.65]
+    dropout_p_list = [0.0, 0.25] #[0.35, 0.5, 0.65]
 
-    for conv_dropout_p in conv_dropout_p_list:
-        for dense_dropout_p in dense_dropout_p_list:
-            for preprocessing_idx in range(4):
+    for dropout_p in dropout_p_list:
+        for preprocessing_idx in range(4):
 
-                pp = [False, False, False, False]
-                pp[preprocessing_idx] = True
+            pp = [False, False, False, False]
+            pp[preprocessing_idx] = True
 
-                noise = False
-                none, rot, fovea, linear = pp
-                pp_affix = ['none', 'rot', 'fovea', 'linear'][preprocessing_idx]
+            noise = False
+            none, rot, fovea, linear = pp
+            pp_affix = ['none', 'rot', 'fovea', 'linear'][preprocessing_idx]
 
-                train_params = conv_2_layer.make_model(num_classes,
-                                                       rot,
-                                                       fovea,
-                                                       noise,
-                                                       linear,
-                                                       conv_dropout_p,
-                                                       dense_dropout_p,
-                                                       norm_params=norm_params,
-                                                       )
+            model_type = 'conv_2_layer'
+            model_id = 'conv_2_layer_' + pp_affix + '_' + str(dropout_p)
 
-                model, model_name, input_shape = train_params
+            model_params = {'norm_params': norm_params,
+                            'output_size': output_size,
+                            'lr': 0.01,
+                            'rotation':rot,
+                            'foveation':fovea,
+                            'linear_deformation':linear,
+                            }
 
-                model_name = 'conv_2_layer_' + pp_affix + '_' + str(conv_dropout_p) + '_' + str(dense_dropout_p)
+            model_manager.new_model(model_type,
+                                    model_id,
+                                    **model_params,
+                                    )
 
-                model_manager.new_model(model,
-                                        model_name,
-                                        input_shape,
-                                        num_classes,
-                                        lr = 0.001,
-                                        )
+            model_class = model_manager.get_model(model_id)
+            input_shape = model_class.input_shape
 
-                model_class = model_manager.get_model(model_name)
-                input_shape = model_class.input_shape
+            dataset = PatchDataset(dataset_path,
+                                   batch_size,
+                                   input_shape,
+                                   img_class_map,
+                                   )
 
-                model_class.set_session('default')
+            iterations_per_epoch=256#565000
+            max_epochs=2#16
 
-                dataset = PatchDataset(dataset_path,
-                                       batch_size,
-                                       input_shape,
-                                       img_class_map,
-                                       norm_params=norm_params,
-                                       )
-
-                iterations_per_epoch=565000
-                max_epochs=32
-
-                train_model(dataset,
-                            model_class,
-                            batch_size,
-                            iterations_per_epoch,
+            train_model(dataset,
+                        model_class,
+                        batch_size,
+                        iterations_per_epoch,
                         max_epochs,
                         avg_grad_stop=False,
                         avg_grad_n=16
                         )
-
-                print(model_name)
 
 def single_train():
     #dataset_path = '../data/lausanne'
@@ -198,7 +185,7 @@ def single_train():
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     #img_class_map = [[0], [1], [2]]
-    num_classes = len(img_class_map)
+    output_size = len(img_class_map)
     #norm_params = (142.1053396892233, 30.96410819657719)
     norm_params = (126.04022903600975, 29.063149797089494)
 
@@ -207,33 +194,13 @@ def single_train():
     conv_dropout_p = 0.5
     dense_dropout_p = 0.5
 
-    '''train_params = micro.make_model(num_classes,
-                                    norm_params=norm_params,
-                                    )'''
-
-    '''train_params = conv_2_layer_pass_through.make_model(num_classes,
-                                                        conv_dropout_p=conv_dropout_p,
-                                                        dense_dropout_p=dense_dropout_p,
-                                                        norm_params=norm_params,
-                                                        )'''
-
-    '''train_params = conv_2_layer.make_model(num_classes,
-                                           conv_dropout_p,
-                                           dense_dropout_p,
-                                           norm_params=norm_params,
-                                           )'''
-
-    '''train_params = conv_2_layer_non_linear_2.make_model(num_classes,
-                                                      norm_params=norm_params,
-                                                      )'''
-
     rot = True
     fovea = False
     noise = False
     linear = True
     non_linear = False
 
-    train_params = conv_2_layer_conf.make_model(num_classes,
+    train_params = conv_2_layer_conf.make_model(output_size,
                                                 rot,
                                                 fovea,
                                                 noise,
@@ -250,7 +217,7 @@ def single_train():
     model_manager.new_model(model,
                             model_name,
                             input_shape,
-                            num_classes,
+                            output_size,
                             lr = 0.001, #0.001
                             )
 
@@ -291,7 +258,7 @@ def preprocessing_effect():
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     #img_class_map = [[0], [1], [2]]
-    num_classes = len(img_class_map)
+    output_size = len(img_class_map)
     #norm_params = (142.1053396892233, 30.96410819657719)
     norm_params = (126.04022903600975, 29.063149797089494)
 
@@ -299,7 +266,7 @@ def preprocessing_effect():
 
     for rot, fovea, noise, linear, non_linear in tqdm(product([False, True], repeat=5)):
 
-        train_params = conv_2_layer_conf.make_model(num_classes,
+        train_params = conv_2_layer_conf.make_model(output_size,
                                                     rot,
                                                     fovea,
                                                     noise,
@@ -313,7 +280,7 @@ def preprocessing_effect():
         model_manager.new_model(model,
                                 model_name,
                                 input_shape,
-                                num_classes,
+                                output_size,
                                 lr = 0.001, #0.001
                                 )
 
@@ -324,8 +291,6 @@ def preprocessing_effect():
         model_class.summary()
 
         input_shape = model_class.input_shape
-
-        model_class.set_session('default')
 
         dataset = PatchDataset(dataset_path,
                                batch_size,
@@ -352,7 +317,7 @@ def train_n_time(n):
     results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
-    num_classes = len(img_class_map)
+    output_size = len(img_class_map)
     norm_params = (142.1053396892233, 30.96410819657719)
 
     model_manager = ModelsManager(results_path)
@@ -362,7 +327,7 @@ def train_n_time(n):
 
     session_names = ['run_' + str(i+1) + '_new_data' for i in range(n)]
 
-    train_params = conv_2_layer.make_model(num_classes,
+    train_params = conv_2_layer.make_model(output_size,
                                            conv_dropout_p=conv_dropout_p,
                                            dense_dropout_p=dense_dropout_p,
                                            name='conv_2_layer_new_data',
@@ -374,7 +339,7 @@ def train_n_time(n):
     model_manager.new_model(model,
                             model_name,
                             input_shape,
-                            num_classes,
+                            output_size,
                             lr = 0.001,
                             )
 
@@ -382,8 +347,6 @@ def train_n_time(n):
     input_shape = model_class.input_shape
 
     for session_name in session_names:
-
-        model_class.set_session(session_name)
 
         dataset = PatchDataset(dataset_path,
                                batch_size,
@@ -406,21 +369,28 @@ def train_n_time(n):
 
 def predict_single_image(img_number):
 
-    #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '../data/lausanne'
+    #dataset_path = '/scratch/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
 
-    num_classes = len(img_class_map)
+    output_size = len(img_class_map)
 
     norm_params = (126.04022903600975, 29.063149797089494)
 
     model_manager = ModelsManager(results_path)
 
     saved_model = model_manager.get_model('conv_2_layer_fovea_0.5_0.35')
-    saved_model.load_model('latest', 'best')
+
+    saved_model.load_model('best')
+
+    epoch, train, test = saved_model.session_stats('default')
+
+    print(test)
+    #exit()
+
     model = saved_model.model
     input_shape = saved_model.input_shape
 

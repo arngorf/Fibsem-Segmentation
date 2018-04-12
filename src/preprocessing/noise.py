@@ -7,7 +7,7 @@ def noise(x, **kwargs):
     else:
         stddev = 1.
 
-    noise_layer = GaussianNoise(stddev)
+    noise_layer = GaussianNoise(stddev, name='pp_noise')
 
     if 'functional_api' in kwargs and kwargs['functional_api'] == True:
         x = noise_layer(x)

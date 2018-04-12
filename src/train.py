@@ -1,6 +1,7 @@
 from test import test_model
 from tqdm import tqdm
 import numpy as np
+import keras.backend as K
 
 def train_model(dataset,
                 stored_model,
@@ -25,15 +26,19 @@ def train_model(dataset,
     if 'avg_grad_stop' in kwargs:
         avg_grad_stop = kwargs['avg_grad_stop']
 
-    model_name = stored_model.name
     model = stored_model.model
     start_epoch = stored_model.next_epoch
-    session = stored_model.session
     d, h, w = stored_model.input_shape
 
-    model.summary()
+    #model.summary()
 
     all_test_accs = []
+
+    if start_epoch == 1:
+
+        test_acc = test_model(dataset, model)
+
+        stored_model.save_model(model, None, test_acc, 0, change_epoch=False)
 
     pbar = tqdm(range(start_epoch, max_epochs),
                 desc='Epoch: {:d}'.format(start_epoch))
@@ -46,6 +51,7 @@ def train_model(dataset,
 
         fetch_time = 0
         train_time = 0
+        #K.set_learning_phase(1)
 
         for step in tqdm(range(int(iterations_per_epoch / batch_size))):
 
@@ -79,7 +85,7 @@ def train_model(dataset,
         desc += 'acc ({:04.2f}, {:04.2f}) '.format(train_acc, test_acc)
         desc += '(test change({:d}): {:04.4f})'.format(avg_grad_n, acc_change)
 
-        stored_model.save_model(model, train_acc, test_acc, epoch, session)
+        stored_model.save_model(model, train_acc, test_acc, epoch)
 
         pbar.set_description(desc)
 
