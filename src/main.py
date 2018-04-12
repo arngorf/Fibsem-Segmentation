@@ -6,7 +6,7 @@ from tqdm import tqdm
 import time
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] ="0"
+os.environ["CUDA_VISIBLE_DEVICES"] ="2"
 
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
@@ -117,8 +117,8 @@ def dropbox_effect():
                         )
 
 def dropbox_and_preprocessing_effect():
-    dataset_path = '../data/lausanne'
-    #dataset_path = '/scratch/xkv467/lausanne'
+    #dataset_path = '../data/lausanne'
+    dataset_path = '/scratch/xkv467/lausanne'
     results_path = '../results'
     batch_size = 32
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
@@ -165,8 +165,8 @@ def dropbox_and_preprocessing_effect():
                                    img_class_map,
                                    )
 
-            iterations_per_epoch=256#565000
-            max_epochs=2#16
+            iterations_per_epoch = 565000//2
+            max_epochs = 32
 
             train_model(dataset,
                         model_class,
