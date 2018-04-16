@@ -62,7 +62,7 @@ def mini_test():
 
 def dropbox_effect():
     #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne'
     results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
@@ -118,7 +118,7 @@ def dropbox_effect():
 
 def dropbox_and_preprocessing_effect():
     #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne'
     results_path = '../results'
     batch_size = 32
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
@@ -179,7 +179,7 @@ def dropbox_and_preprocessing_effect():
 
 def single_train():
     #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
     batch_size = 32
@@ -252,7 +252,7 @@ def single_train():
 
 def preprocessing_effect():
     #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
     batch_size = 32
@@ -313,7 +313,7 @@ def preprocessing_effect():
 
 def train_n_time(n):
     #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch/xkv467/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne'
     results_path = '../results'
     batch_size = 32
     img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
@@ -370,7 +370,7 @@ def train_n_time(n):
 def predict_single_image(img_number):
 
     dataset_path = '../data/lausanne'
-    #dataset_path = '/scratch/xkv467/lausanne'
+    #dataset_path = '/scratch1/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
     batch_size = 32
