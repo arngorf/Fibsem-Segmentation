@@ -236,7 +236,7 @@ class GeometricTransformationLayer(Layer):
             points = correct_center(points)
 
             interpolant = linear_interpolation(points) #nearest_neighbour_interpolation(points)'''
-            rv = np.random(4)
+            rv = np.random.random(4)
 
             if rv[0] > 0.5:
                 inputs = K.reverse(inputs,axes=2)
