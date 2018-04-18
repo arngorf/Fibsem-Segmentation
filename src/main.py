@@ -128,17 +128,17 @@ def dropbox_and_preprocessing_effect():
 
     model_manager = ModelsManager(results_path)
 
-    dropout_p_list = [0.0, 0.25] #[0.35, 0.5, 0.65]
+    dropout_p_list = [0.25] #[0.35, 0.5, 0.65]
 
     for dropout_p in dropout_p_list:
-        for preprocessing_idx in range(4):
+        for preprocessing_idx in [1]:
 
             pp = [False, False, False, False]
             pp[preprocessing_idx] = True
 
             noise = False
             none, rot, fovea, linear = pp
-            pp_affix = ['none', 'rot', 'fovea', 'linear'][preprocessing_idx]
+            pp_affix = ['none', 'rot2', 'fovea', 'linear'][preprocessing_idx]
 
             model_type = 'conv_2_layer'
             model_id = 'conv_2_layer_' + pp_affix + '_' + str(dropout_p)

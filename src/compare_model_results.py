@@ -73,10 +73,10 @@ def plot_single_all_sessions(model_name):
 
     plt.legend()
 
-def plot_single(saved_model, session_name='default'):
+def plot_single(saved_model):
 
-    epoch, train, test = saved_model.session_stats(session_name)
-    model_name = saved_model.name
+    epoch, train, test = saved_model.session_stats()
+    model_name = saved_model.model_id
     formated_name = model_name.replace('conv_2_layer_', '').replace('_','\n')
     color = 'black'
     if 'rot' in formated_name:
@@ -92,7 +92,7 @@ def plot_single(saved_model, session_name='default'):
     plt.plot(epoch, train, color=color, label=formated_name)
     plt.plot(epoch, test, color=color, ls='--', label=formated_name)
 
-def plot_specific(model_names, session_name='default'):
+def plot_specific(model_names):
 
     global model_manager
 
@@ -103,9 +103,9 @@ def plot_specific(model_names, session_name='default'):
     for model_name in model_names:
         if model_manager.has_model(model_name):
             saved_model = model_manager.get_model(model_name)
-            plot_single(saved_model, session_name)
+            plot_single(saved_model)
 
-def plot_bar_chart_average_success(model_names, session_name='default'):
+def plot_bar_chart_average_success(model_names):
 
     global model_manager
 
@@ -122,7 +122,7 @@ def plot_bar_chart_average_success(model_names, session_name='default'):
 
             saved_model = model_manager.get_model(model_name)
 
-            epoch, train, test = saved_model.session_stats(session_name)
+            epoch, train, test = saved_model.session_stats()
 
             avg_acc = np.mean(test)
             max_acc = np.max(test)
@@ -150,34 +150,22 @@ if __name__ == '__main__':
 
     plot_num = 0
 
-    for conv_prob in ['0.35', '0.5']:
-        for dense_prob in ['0.35', '0.5', '0.65']:
+    for dropout_prob in ['0.0', '0.25']:
 
-            plot_num += 1
-            plt.subplot(2, 3, plot_num)
+        plot_num += 1
+        plt.subplot(2, 3, plot_num)
 
-            model_names = []
+        model_names = []
 
-            for pp in ['rot', 'fovea', 'linear']:
-                name = 'conv_2_layer_' + pp + '_' + conv_prob + '_' + dense_prob
-                model_names.append(name)
-                all_model_names.append(name)
+        for pp in ['none', 'rot', 'fovea', 'linear']:
+            name = 'conv_2_layer_' + pp + '_' + dropout_prob
+            model_names.append(name)
+            all_model_names.append(name)
 
-            plot_specific(model_names)
-            plt.title('CDP: ' + conv_prob + ', DDP: ' + dense_prob)
-            plt.ylim(0.5,1)
-            plt.legend()
-
-    plt.subplot(2, 4, 8)
-    for pp in ['rot', 'fovea', 'linear']:
-        name = 'conv_2_layer_none_0.0_0.0'
-
-        all_model_names.append(name)
-
-    '''plot_specific([name])
-    plt.title('CDP: 0.0, DDP: 0.0')
-    plt.ylim(0.5,1)
-    plt.legend()'''
+        plot_specific(model_names)
+        plt.title('D/O prob: ' + dropout_prob)
+        plt.ylim(0.5,1)
+        plt.legend()
 
     plt.show()
 
