@@ -218,7 +218,7 @@ class GeometricTransformationLayer(Layer):
 
             return K.reshape(values, (-1, w, h, d, 1))
 
-        def train_augmented_inputs():
+        def train_augmented_inputs(inputs):
             # THIS CODE HAS BEEN ALTERED TO NOT DO ANYTHING OTHER THAN SIMPLE PIXEL TO PIXEL REARRANGEMENTS
 
             '''
@@ -249,7 +249,7 @@ class GeometricTransformationLayer(Layer):
 
             return inputs
 
-        def test_augmented_inputs():
+        def test_augmented_inputs(inputs):
             # THIS CODE HAS BEEN ALTERED TO NOT DO ANYTHING OTHER THAN SIMPLE PIXEL TO PIXEL REARRANGEMENTS
 
             '''
@@ -265,9 +265,9 @@ class GeometricTransformationLayer(Layer):
             return inputs # interpolant
 
         if self.force_use_in_test_phase:
-            return train_augmented_inputs()
+            return train_augmented_inputs(inputs)
 
-        return K.in_train_phase(train_augmented_inputs(), test_augmented_inputs(),
+        return K.in_train_phase(train_augmented_inputs(inputs), test_augmented_inputs(inputs),
                                 training=training)
 
     def compute_output_shape(self, input_shape):
