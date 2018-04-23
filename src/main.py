@@ -9,7 +9,7 @@ import pickle
 
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] ="1"
@@ -249,7 +249,7 @@ def predict_single_image(img_number):
     output = predict_image(dataset, model, image)
     print(output.shape)
 
-    plt.imshow(image[image.shape[0]//2,:,:], cmap='gray')
+    #plt.imshow(image[image.shape[0]//2,:,:], cmap='gray')
 
     segments = np.argmax(output, axis=2)
 
@@ -257,9 +257,10 @@ def predict_single_image(img_number):
 
     for class_idx in range(6):
         if class_idx == 1:
-            plt.contour((segments==class_idx).astype(int), levels=[0.5], colors = [colors[class_idx]], linewidths=1)
+            pass
+            #plt.contour((segments==class_idx).astype(int), levels=[0.5], colors = [colors[class_idx]], linewidths=1)
 
-    plt.show()
+    #plt.show()
 
     return output
 
