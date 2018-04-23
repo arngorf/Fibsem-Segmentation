@@ -213,7 +213,9 @@ def predict_single_image(img_number):
     batch_size = 32
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     #img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
-    img_class_map = [[0, 1, 2, 5, 6, 7], [3, 4, 8]] # other, vesicles
+    #img_class_map = [[0, 1, 2, 5, 6, 7], [3, 4, 8]] # other, vesicles
+    img_class_map = [[0, 7], [1, 2, 3, 4, 8, 6, 5]] # cytosol, rest
+
 
     output_size = len(img_class_map)
 
@@ -241,23 +243,23 @@ def predict_single_image(img_number):
     # consistency test:
     # Does model produce the same test acc as expected two times in a row?
 
-    test_acc = test_model(dataset, model)
-    print('test_acc:', test_acc)
+    #test_acc = test_model(dataset, model)
+    #print('test_acc:', test_acc)
 
     image = get_image_stack(img_number, input_shape[0])
 
     output = predict_image(dataset, model, image)
-    print(output.shape)
+    #print(output.shape)
 
     #plt.imshow(image[image.shape[0]//2,:,:], cmap='gray')
 
-    segments = np.argmax(output, axis=2)
+    #segments = np.argmax(output, axis=2)
 
-    colors = ['red', 'blue', 'g', 'purple', 'cyan', 'gold']
+    #colors = ['red', 'blue', 'g', 'purple', 'cyan', 'gold']
 
-    for class_idx in range(6):
-        if class_idx == 1:
-            pass
+    #for class_idx in range(6):
+    #    if class_idx == 1:
+    #        pass
             #plt.contour((segments==class_idx).astype(int), levels=[0.5], colors = [colors[class_idx]], linewidths=1)
 
     #plt.show()
@@ -281,7 +283,7 @@ if __name__ == '__main__':
     #preprocessing_effect()
     #train_n_time(3)
     #predict_single_image(400)
-    #predict_range(201, 301)#400)
+    predict_range(200, 231)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
-    train_single()
+    #train_single()
