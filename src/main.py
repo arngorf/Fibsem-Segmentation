@@ -27,13 +27,16 @@ def get_image_stack(cidx, depth):
 
     for idx in range(1,s+1):
 
-        left_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
+        #left_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
+        left_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
         left.append(np.array(Image.open(left_path), dtype=np.float32))
 
-        right_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
+        #right_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
+        right_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
         right.append(np.array(Image.open(right_path), dtype=np.float32))
 
-    center_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
+    #center_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
+    center_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
 
     center_img = [np.array(Image.open(right_path), dtype=np.float32)]
 
