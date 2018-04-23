@@ -20,13 +20,7 @@ def test_normalization_layer(stop_after_n_examples):
     conv_dropout_p = 0.5
     dense_dropout_p = 0.5
 
-    train_params = test_normalization_model.make_model(num_classes,
-                                                       conv_dropout_p=conv_dropout_p,
-                                                       dense_dropout_p=dense_dropout_p,
-                                                       norm_params=norm_params,
-                                                       )
-
-    model, model_name, input_shape = train_params
+    model, input_shape = train_params
 
     model_manager.new_model(model,
                             model_name,

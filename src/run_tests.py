@@ -31,7 +31,7 @@ if __name__ == '__main__':
     #benchmark_dataset(25000)
     #benchmark_test_dataset(25000)
     #validate_train_test()
-    #test_normalization_layer(4)
+    test_normalization_layer(4)
     #test_foveation_layer(4)
     #test_affine_layer(4)
     #test_rotation_layer(4)
@@ -41,5 +41,5 @@ if __name__ == '__main__':
     #test_softmax_layer()
     #test_train_model_again()
 
-    test_acc_matches_stored_test_acc()
+    #test_acc_matches_stored_test_acc()
     #validate_test_consistency_2()

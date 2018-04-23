@@ -565,6 +565,10 @@ class PatchDataset(object):
     def feature_class(self):
         return self._feature_shape
 
+    @property
+    def n_classes(self):
+        return self._n_classes
+
     def get_number_of_remaining_available_batches(self):
         return [feature_class.get_number_of_remaining_available_batches() for feature_class in self.feature_classes]
 
@@ -837,7 +841,7 @@ class PatchDataset(object):
         pad_j = self._feature_shape[1] // 2
         pad_i = self._feature_shape[2] // 2
 
-        I = np.pad(img,[0, pad_j, pad_i ], mode='reflect')
+        I = np.pad(img,[(0,0), (pad_j,pad_j), (pad_i,pad_i)], mode='reflect')
 
         for j in tqdm(range(h)):
             for i in range(w):
@@ -845,8 +849,8 @@ class PatchDataset(object):
                 ii = i + pad_i
                 jj = j + pad_j
 
-                x = img[:, jj - h//2:jj + w//2 + 1, ii - w//2:ii + w//2 + 1]
-
+                x = I[:, (jj - pad_j):(jj + pad_j + 1), (ii - pad_i):(ii + pad_i + 1)]
+                #print(x.shape, j, i)
                 yield x, j, i
 
 class SparseImageSegmentation(object):

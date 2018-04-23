@@ -243,7 +243,7 @@ class GeometricTransformationLayer(Layer):
             if rv[1] > 0.5:
                 inputs = K.reverse(inputs,axes=3)
             if rv[2] > 0.5:
-                inputs = K.permute_dimensions(inputs, (0,2,1,3))
+                inputs = K.permute_dimensions(inputs, (0,2,1,3,4))
             if rv[3] > 0.5:
                 inputs = K.reverse(inputs,axes=1)
 

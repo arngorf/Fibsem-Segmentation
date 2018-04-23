@@ -5,7 +5,7 @@ from preprocessing import all_preprocessing
 
 def make_model(num_classes, **model_params):
 
-    input_shape = (1, 1, 1)
+    input_shape = (13, 13, 13)
     k_input_shape = (input_shape[0], input_shape[1], input_shape[2], 1)
 
     if 'normalize' in model_params:

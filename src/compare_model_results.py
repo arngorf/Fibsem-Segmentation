@@ -153,7 +153,7 @@ if __name__ == '__main__':
     for dropout_prob in ['0.0', '0.25']:
 
         plot_num += 1
-        plt.subplot(2, 3, plot_num)
+        plt.subplot(1, 2, plot_num)
 
         model_names = []
 
