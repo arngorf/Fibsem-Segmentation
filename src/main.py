@@ -206,8 +206,8 @@ def train_single():
 
 def predict_single_image(img_number):
 
-    dataset_path = '../data/lausanne'
-    #dataset_path = '/scratch1/xkv467/lausanne'
+    #dataset_path = '../data/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
     batch_size = 32
