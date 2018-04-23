@@ -223,14 +223,11 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('mini')
+    saved_model = model_manager.get_model('conv_2_layer_cytosol')
 
     model = saved_model.load_model('best')
 
     epoch, train, test = saved_model.session_stats()
-
-    print(test)
-    #exit()
 
     input_shape = saved_model.input_shape
 
