@@ -177,7 +177,7 @@ def train_single():
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
-                    'lr': 0.0005,
+                    'lr': 0.001,
                     'rotation':False,
                     'foveation':True,
                     'linear_deformation':True,
