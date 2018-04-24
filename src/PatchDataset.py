@@ -330,13 +330,18 @@ class FeatureClassImageQuery(object):
 
                 # Check if image is available
                 with self.image_list_lock:
-                    if len(self.image_point_indices_pair_list) > 0:
+
+                    n = len(self.image_point_indices_pair_list)
+
+                    if n > 0:
+
+                        rand_img_idx = randint(0, n-1)
 
                         # get next randomized index in the image
-                        x_j, x_i = self.image_point_indices_pair_list[0][1].pop()
+                        x_j, x_i = self.image_point_indices_pair_list[rand_img_idx][1].pop()
 
                         # grab the image data from that image
-                        img = self.image_point_indices_pair_list[0][0]
+                        img = self.image_point_indices_pair_list[rand_img_idx][0]
 
                         x[:] = get_padded_image(img,
                                                 self.feature_shape[0] // 2,
@@ -350,8 +355,9 @@ class FeatureClassImageQuery(object):
                         # also delete by given probability, but only if more than 1
                         # image is stored
 
-                        if len(self.image_point_indices_pair_list[0][1]) == 0:
-                            del self.image_point_indices_pair_list[0]
+                        if len(self.image_point_indices_pair_list[rand_img_idx][1]) == 0:
+                            print('deleting image at idx:', rand_img_idx)
+                            del self.image_point_indices_pair_list[rand_img_idx]
 
                         elif self.new_image_probability > 0:
 
@@ -359,7 +365,7 @@ class FeatureClassImageQuery(object):
 
                             if random_roll < self.new_image_probability and len(self.image_point_indices_pair_list) > 1:
 
-                                del self.image_point_indices_pair_list[0]
+                                del self.image_point_indices_pair_list[rand_img_idx]
                     # Grab image if not enough is fetched or currently being fetched
 
                     if len(self.image_point_indices_pair_list) + \
@@ -517,7 +523,7 @@ class PatchDataset(object):
         self._feature_classes = []
 
         segmentations, bounds = self._get_image_indices_with_class_list(self._train_params)
-        number_of_live_images = 1
+        number_of_live_images = 3
 
         for class_idx in range(self._n_classes):
 

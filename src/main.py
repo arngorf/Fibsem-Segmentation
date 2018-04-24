@@ -163,8 +163,8 @@ def train_single():
     results_path = '../results'
     batch_size = 32
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
-    #img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
-    img_class_map = [[0, 7], [1, 2, 3, 4, 8, 6, 5]]
+    img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
+    #img_class_map = [[0, 7], [1, 2, 3, 4, 8, 6, 5]]
     output_size = len(img_class_map)
     norm_params = (126.04022903600975, 29.063149797089494)
 
@@ -173,7 +173,7 @@ def train_single():
     dropout_p = 0.25
 
     model_type = 'conv_2_layer'
-    model_id = 'conv_2_layer_cytosol_slow'
+    model_id = 'conv_2_layer_07_1_2_348_6_5'
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
@@ -200,7 +200,7 @@ def train_single():
                            )
 
     iterations_per_epoch = 565000//2
-    max_epochs = 32
+    max_epochs = 64
 
     train_model(dataset,
                 model_class,
@@ -219,9 +219,9 @@ def predict_single_image(img_number):
     results_path = '../results'
     batch_size = 128
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
-    #img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
+    img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
     #img_class_map = [[0, 1, 2, 5, 6, 7], [3, 4, 8]] # other, vesicles
-    img_class_map = [[0, 7], [1, 2, 3, 4, 8, 6, 5]] # cytosol, rest
+    #img_class_map = [[0, 7], [1, 2, 3, 4, 8, 6, 5]] # cytosol, rest
 
 
     output_size = len(img_class_map)
@@ -230,7 +230,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_cytosol_slow')
+    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5')
 
     model = saved_model.load_model('best')
 
@@ -271,7 +271,7 @@ def predict_single_image(img_number):
     return output
 
 def predict_range(start_idx, end_idx):
-    save_path = '../prediction_results'
+    save_path = '../prediction_results/07_1_2_348_6_5'
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     #preprocessing_effect()
     #train_n_time(3)
     #predict_single_image(400)
-    predict_range(202, 210 + 1)#400)
+    train_single()
+    predict_range(200, 210 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
-    #train_single()
