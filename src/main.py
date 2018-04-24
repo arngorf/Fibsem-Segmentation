@@ -169,11 +169,11 @@ def train_single():
     dropout_p = 0.25
 
     model_type = 'conv_2_layer'
-    model_id = 'conv_2_layer_cytosol'
+    model_id = 'conv_2_layer_cytosol_slow'
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
-                    'lr': 0.01,
+                    'lr': 0.0005,
                     'rotation':False,
                     'foveation':True,
                     'linear_deformation':True,
@@ -283,7 +283,7 @@ if __name__ == '__main__':
     #preprocessing_effect()
     #train_n_time(3)
     #predict_single_image(400)
-    predict_range(200, 231)#400)
+    #predict_range(200, 231)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
-    #train_single()
+    train_single()
