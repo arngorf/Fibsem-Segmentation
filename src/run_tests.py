@@ -27,8 +27,8 @@ custom_objects={'GeometricTransformationLayer':GeometricTransformationLayer,
 if __name__ == '__main__':
 
     #validate_output_manually()
-    validate_process_unlabeled_image()
-    #validate_test_output_manually()
+    #validate_process_unlabeled_image()
+    validate_test_output_manually()
     #benchmark_dataset(25000)
     #benchmark_test_dataset(25000)
     #validate_train_test()

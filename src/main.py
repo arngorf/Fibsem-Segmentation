@@ -217,7 +217,7 @@ def predict_single_image(img_number):
     dataset_path = '/scratch1/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
-    batch_size = 32
+    batch_size = 64
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     #img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
     #img_class_map = [[0, 1, 2, 5, 6, 7], [3, 4, 8]] # other, vesicles
@@ -287,7 +287,7 @@ if __name__ == '__main__':
     #preprocessing_effect()
     #train_n_time(3)
     #predict_single_image(400)
-    predict_range(200, 210 + 1)#400)
+    predict_range(202, 210 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
     #train_single()

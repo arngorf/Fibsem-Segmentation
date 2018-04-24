@@ -93,18 +93,25 @@ def validate_output_manually():
 def validate_test_output_manually():
     dataset = dataset_real()
 
+    batch_size = 32
+
     for x, y, progress in dataset.test_data_stream(batch_size):
         x = x.reshape(32, 45, 45, 45)
-        x[:,45//2,:,:] = dataset_mean
-        x[:,:,45//2,:] = dataset_mean
+        x[:,45//2,[0,1,2,3,4,5,44,43,42,41,40,39],:] = np.max(x)
+        x[:,[0,1,2,3,4,5,44,43,42,41,40,39],45//2,:] = np.max(x)
 
         for i in range(12):
-            plt.subplot(3,4,i+1)
-            plt.title(class_map_encoding[y[i]])
-            plt.imshow(x[i,:,:,45//2], vmin=0, vmax=255, cmap='gray')
+            #    plt.subplot(3,4,i+1)
+            #    plt.title(class_map_encoding[y[i]])
+            for j in range(45):
+                plt.subplot(5,9,j+1)
+                if j == 4:
+                    plt.title(class_map_encoding[np.argmax(y[i])])
+                plt.imshow(x[i,:,:,j], vmin=0, vmax=255, cmap='gray')
 
-        plt.show()
+            plt.subplots_adjust(wspace=0.05, hspace=0.05)
 
+            plt.show()
 def validate_process_unlabeled_image():
     dataset = dataset_real()
 
