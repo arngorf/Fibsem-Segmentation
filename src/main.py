@@ -170,15 +170,15 @@ def train_single():
 
     model_manager = ModelsManager(results_path)
 
-    dropout_p = 0.25
+    dropout_p = 0.35
 
     model_type = 'conv_2_layer'
-    model_id = 'conv_2_layer_07_1_2_348_6_5'
+    model_id = 'conv_2_layer_07_1_2_348_6_5_more_reg'
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
                     'lr': 0.001,
-                    'rotation':False,
+                    'rotation':True,
                     'foveation':True,
                     'linear_deformation':True,
                     'conv_dropout_p':dropout_p,
@@ -199,8 +199,8 @@ def train_single():
                            img_class_map,
                            )
 
-    iterations_per_epoch = 565000//2
-    max_epochs = 64
+    iterations_per_epoch = 565000//4
+    max_epochs = 32*4
 
     train_model(dataset,
                 model_class,
@@ -230,7 +230,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5')
+    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5_more_reg')
 
     model = saved_model.load_model('best')
 
