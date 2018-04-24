@@ -1,19 +1,20 @@
 from PatchDataset import PatchDataset
-import numpy as np
+from PIL import Image
 from tqdm import tqdm
+import numpy as np
+import matplotlib.pyplot as plt
 
 def dataset_real():
     dataset_dir = '../data/lausanne'
     batch_size = 32
     feature_shape = (45, 45, 45)
-    img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1, 2]]
-    norm_params = (126.04022903600975, 29.063149797089494)
+    #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1, 2]]
+    img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
 
     dataset = PatchDataset(dataset_dir,
                             batch_size,
                             feature_shape,
-                            img_class_map,
-                            norm_params=norm_params)
+                            img_class_map)
 
     return dataset
 
@@ -33,7 +34,37 @@ def dataset_synth():
 
     return dataset
 
-img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1, 2]]
+def get_image_stack(cidx, depth):
+    assert depth % 2 == 1
+
+    s = depth // 2
+
+    left = []
+    right = []
+
+    for idx in range(1,s+1):
+
+        left_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
+        #left_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
+        left.append(np.array(Image.open(left_path), dtype=np.float32))
+
+        right_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
+        #right_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
+        right.append(np.array(Image.open(right_path), dtype=np.float32))
+
+    center_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
+    #center_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
+
+    center_img = np.array(Image.open(center_path), dtype=np.float32)
+    result = left
+    result.reverse()
+    result.append(center_img)
+    result.extend(right)
+
+    return np.stack(result)
+
+#img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1, 2]]
+img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
 class_encoding = ['Cytosol', 'Membrane', 'Synapse', 'Vesicle', 'Endosome',
                   'EnRe', 'Mitochondria','Filament', 'DCV']
 
@@ -43,20 +74,21 @@ def validate_output_manually():
     dataset = dataset_real()
 
     x, y = dataset.next_batch()
-    print(y)
 
     x = x.reshape(32, 45, 45, 45)
     x[:,45//2,[0,1,2,3,4,5,44,43,42,41,40,39],:] = np.max(x)
     x[:,[0,1,2,3,4,5,44,43,42,41,40,39],45//2,:] = np.max(x)
 
-    import matplotlib.pyplot as plt
-
     for i in range(12):
-        plt.subplot(3,4,i+1)
-        plt.title(class_map_encoding[np.argmax(y[i])])
-        plt.imshow(x[i,:,:,45//2], vmin=0, vmax=255, cmap='gray')
+        for j in range(45):
+            plt.subplot(5,9,j+1)
+            if j == 4:
+                plt.title(class_map_encoding[np.argmax(y[i])])
+            plt.imshow(x[i,:,:,j], vmin=0, vmax=255, cmap='gray')
 
-    plt.show()
+        plt.subplots_adjust(wspace=0.05, hspace=0.05)
+
+        plt.show()
 
 def validate_test_output_manually():
     dataset = dataset_real()
@@ -66,14 +98,57 @@ def validate_test_output_manually():
         x[:,45//2,:,:] = dataset_mean
         x[:,:,45//2,:] = dataset_mean
 
-        import matplotlib.pyplot as plt
-
         for i in range(12):
             plt.subplot(3,4,i+1)
             plt.title(class_map_encoding[y[i]])
             plt.imshow(x[i,:,:,45//2], vmin=0, vmax=255, cmap='gray')
 
         plt.show()
+
+def validate_process_unlabeled_image():
+    dataset = dataset_real()
+
+    image = get_image_stack(210, 45)
+
+    for x, jj, ii in dataset.process_unlabeled_image(image):
+
+        x = x.reshape((x.shape[0], x.shape[1], x.shape[2]))
+
+        if jj == 20 and ii == 20:
+            for i in range(45):
+                if i == 4:
+                    plt.title('First Image:')
+                plt.subplot(5,9,i+1)
+                plt.imshow(x[:,:,i], cmap='gray')
+
+            plt.show()
+
+        if jj == 20 and ii == 500:
+            for i in range(45):
+                if i == 4:
+                    plt.title('Top boundary:')
+                plt.subplot(5,9,i+1)
+                plt.imshow(x[:,:,i], cmap='gray')
+
+            plt.show()
+
+        if jj == 500 and ii == 20:
+            for i in range(45):
+                if i == 4:
+                    plt.title('Left boundary:')
+                plt.subplot(5,9,i+1)
+                plt.imshow(x[:,:,i], cmap='gray')
+
+            plt.show()
+
+        if jj == 500 and ii > 490 and ii < 700 and ii % 5 == 0:
+            for i in range(45):
+                if i == 4:
+                    plt.title('Image: ii:' + str(ii) + 'jj:' + str(jj))
+                plt.subplot(5,9,i+1)
+                plt.imshow(x[:,:,i], cmap='gray')
+
+            plt.show()
 
 def benchmark_dataset(iterations):
     dataset = dataset_real()
@@ -88,7 +163,6 @@ def benchmark_test_dataset(iterations):
         pass#print(progress)
 
 def validate_train_test():
-    import matplotlib.pyplot as plt
 
     dataset = dataset_synth()
     num_batches = 4

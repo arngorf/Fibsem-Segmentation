@@ -38,9 +38,13 @@ def get_image_stack(cidx, depth):
     #center_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
     center_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
 
-    center_img = [np.array(Image.open(right_path), dtype=np.float32)]
+    center_img = np.array(Image.open(center_path), dtype=np.float32)
+    result = left
+    result.reverse()
+    result.append(center_img)
+    result.extend(right)
 
-    return np.stack(left[::-1] + center_img + right)
+    return np.stack(result)
 
 
 def mini_test():
@@ -283,7 +287,7 @@ if __name__ == '__main__':
     #preprocessing_effect()
     #train_n_time(3)
     #predict_single_image(400)
-    #predict_range(200, 231)#400)
+    predict_range(200, 210 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
-    train_single()
+    #train_single()
