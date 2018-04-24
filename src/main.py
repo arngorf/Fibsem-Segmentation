@@ -217,7 +217,7 @@ def predict_single_image(img_number):
     dataset_path = '/scratch1/xkv467/lausanne'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
-    batch_size = 64
+    batch_size = 128
     #img_class_map = [[0, 3, 4, 5, 6, 7, 8], [1,2]]
     #img_class_map = [[0, 7], [1], [2], [3, 4, 8], [6], [5]]
     #img_class_map = [[0, 1, 2, 5, 6, 7], [3, 4, 8]] # other, vesicles
