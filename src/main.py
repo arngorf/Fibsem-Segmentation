@@ -230,7 +230,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_cytosol')
+    saved_model = model_manager.get_model('conv_2_layer_cytosol_slow')
 
     model = saved_model.load_model('best')
 
