@@ -356,7 +356,6 @@ class FeatureClassImageQuery(object):
                         # image is stored
 
                         if len(self.image_point_indices_pair_list[rand_img_idx][1]) == 0:
-                            print('deleting image at idx:', rand_img_idx)
                             del self.image_point_indices_pair_list[rand_img_idx]
 
                         elif self.new_image_probability > 0:
