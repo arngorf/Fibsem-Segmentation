@@ -522,7 +522,7 @@ class PatchDataset(object):
         self._feature_classes = []
 
         segmentations, bounds = self._get_image_indices_with_class_list(self._train_params)
-        number_of_live_images = 3
+        number_of_live_images = 5
 
         for class_idx in range(self._n_classes):
 
