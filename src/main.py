@@ -200,7 +200,7 @@ def train_single():
                            )
 
     iterations_per_epoch = 565000//4
-    max_epochs = 32*4
+    max_epochs = 32*4*2
 
     train_model(dataset,
                 model_class,
@@ -288,6 +288,6 @@ if __name__ == '__main__':
     #train_n_time(3)
     #predict_single_image(400)
     train_single()
-    predict_range(200, 210 + 1)#400)
+    predict_range(250, 251 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()

@@ -11,7 +11,6 @@ import sys
 import threading
 import util.Online_Parameter_Calculation as OPC
 
-NO_SEGMENTATION = 255
 NO_LABEL = 255
 
 def load_image(path, bounds):
@@ -666,7 +665,7 @@ class PatchDataset(object):
             img = np.array(Image.open(path))
             img_h, img_w = img.shape
 
-            j, i = np.where(img != NO_SEGMENTATION)
+            j, i = np.where(img != NO_LABEL)
 
             bounds = (max(np.min(j) - self._feature_shape[1] // 2, 0),
                       min(np.max(j) + self._feature_shape[1] // 2 + 1, img_h),
