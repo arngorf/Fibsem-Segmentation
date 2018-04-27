@@ -72,7 +72,7 @@ class ModelsManager():
 
             model_id = model_class.model_id
 
-            def callback():
+            def callback(model_id=model_id):
                 self.new_checkpoint_callback(model_id)
 
             model_class.set_model_callback(callback)
@@ -98,7 +98,6 @@ class ModelsManager():
         model_class.set_model_callback(callback)
 
         self._models[model_id] = model_class
-
         callback()
 
     def get_model(self, model_id):
@@ -341,12 +340,15 @@ class ModelClass():
         for layer in self._model.layers:
             print(layer.get_output_at(0).get_shape().as_list())
 
-    def session_summary(self):
+    def training_summary(self):
 
-        print('Model:', self._model_id, 'session:', self.session, 'summary:')
+        print('Model:', self._model_id, 'summary:')
         for saved_model in self._saved_models_list:
             msg =  'Epoch {:d}, '.format(saved_model.epoch)
-            msg += 'train acc: {:04.2f}, '.format(saved_model.train_acc)
+            if saved_model.epoch != 0:
+                msg += 'train acc: {:04.2f}, '.format(saved_model.train_acc)
+            else:
+                msg += 'not applicabel , '
             msg += 'test acc: {:04.2f}, '.format(saved_model.test_acc)
             print(msg)
 

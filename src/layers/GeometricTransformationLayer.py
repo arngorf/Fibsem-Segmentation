@@ -221,7 +221,6 @@ class GeometricTransformationLayer(Layer):
         def train_augmented_inputs(inputs):
             # THIS CODE HAS BEEN ALTERED TO NOT DO ANYTHING OTHER THAN SIMPLE PIXEL TO PIXEL REARRANGEMENTS
 
-            '''
             points = K.variable(self.points)
 
             if self.rotation:
@@ -235,8 +234,8 @@ class GeometricTransformationLayer(Layer):
 
             points = correct_center(points)
 
-            interpolant = linear_interpolation(points) #nearest_neighbour_interpolation(points)'''
-            rv = np.random.random(4)
+            interpolant = linear_interpolation(points) #nearest_neighbour_interpolation(points)
+            '''rv = np.random.random(4)
 
             if rv[0] > 0.5:
                 inputs = K.reverse(inputs,axes=2)
@@ -245,14 +244,13 @@ class GeometricTransformationLayer(Layer):
             if rv[2] > 0.5:
                 inputs = K.permute_dimensions(inputs, (0,2,1,3,4))
             if rv[3] > 0.5:
-                inputs = K.reverse(inputs,axes=1)
+                inputs = K.reverse(inputs,axes=1)'''
 
-            return inputs
+            return interpolant # inputs
 
         def test_augmented_inputs(inputs):
             # THIS CODE HAS BEEN ALTERED TO NOT DO ANYTHING OTHER THAN SIMPLE PIXEL TO PIXEL REARRANGEMENTS
 
-            '''
             points = K.variable(self.points)
 
             if self.non_linear_resampling:
@@ -260,9 +258,9 @@ class GeometricTransformationLayer(Layer):
 
             points = correct_center(points)
 
-            interpolant = linear_interpolation(points) #nearest_neighbour_interpolation(points)'''
+            interpolant = linear_interpolation(points) #nearest_neighbour_interpolation(points)
 
-            return inputs # interpolant
+            return interpolant # inputs
 
         if self.force_use_in_test_phase:
             return train_augmented_inputs(inputs)

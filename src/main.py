@@ -12,7 +12,16 @@ import numpy as np
 #import matplotlib.pyplot as plt
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] ="2"
+os.environ["CUDA_VISIBLE_DEVICES"] ="3"
+
+limit_memory = False
+
+if limit_memory:
+    import tensorflow as tf
+    from keras.backend.tensorflow_backend import set_session
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.3
+    set_session(tf.Session(config=config))
 
 from ModelsManager import ModelsManager
 from PatchDataset import PatchDataset
@@ -82,8 +91,8 @@ def mini_test():
                            img_class_map,
                            )
 
-    iterations_per_epoch=131072*10
-    max_epochs=32
+    iterations_per_epoch = 131072//2
+    max_epochs = 9
 
     train_model(dataset,
                 model_class,

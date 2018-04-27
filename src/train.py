@@ -4,7 +4,7 @@ import numpy as np
 import keras.backend as K
 
 def train_model(dataset,
-                stored_model,
+                model_class,
                 batch_size,
                 iterations_per_epoch=4096*32,
                 max_epochs=30,
@@ -26,9 +26,9 @@ def train_model(dataset,
     if 'avg_grad_stop' in kwargs:
         avg_grad_stop = kwargs['avg_grad_stop']
 
-    model = stored_model.model
-    start_epoch = stored_model.next_epoch
-    d, h, w = stored_model.input_shape
+    model = model_class.model
+    start_epoch = model_class.next_epoch
+    d, h, w = model_class.input_shape
 
     #model.summary()
 
@@ -38,10 +38,12 @@ def train_model(dataset,
 
         test_acc = test_model(dataset, model)
 
-        stored_model.save_model(model, None, test_acc, 0, change_epoch=False)
+        model_class.save_model(model, None, test_acc, 0, change_epoch=False)
 
-    pbar = tqdm(range(start_epoch, max_epochs),
-                desc='Epoch: {:d}'.format(start_epoch))
+    pbar = tqdm(range(start_epoch, max_epochs+1),
+                desc='Epoch: {:d}'.format(start_epoch),
+                #initial=start_epoch,
+                )
 
     for epoch in pbar:
 
@@ -85,12 +87,14 @@ def train_model(dataset,
         desc += 'acc ({:04.2f}, {:04.2f}) '.format(train_acc, test_acc)
         desc += '(test change({:d}): {:04.4f})'.format(avg_grad_n, acc_change)
 
-        stored_model.save_model(model, train_acc, test_acc, epoch)
+        model_class.save_model(model, train_acc, test_acc, epoch)
 
         pbar.set_description(desc)
 
         if avg_grad_stop and N >= avg_grad_n and acc_change < 0:
             break
+
+    model_class.training_summary()
 
 
 
