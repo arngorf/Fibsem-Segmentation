@@ -3,7 +3,7 @@ import os
 import pickle
 import warnings
 from time import time
-from models import micro, mini, midi, conv_2_layer
+from models import micro, mini, midi, conv_2_layer, conv_2_layer_more
 
 UNCOMPILED_MODEL_FILENAME = 'base_model.h5'
 MODEL_CLASS_FILENAME = 'saved_model.p'
