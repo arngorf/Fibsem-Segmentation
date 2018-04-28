@@ -20,7 +20,7 @@ if limit_memory:
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.3
+    config.gpu_options.per_process_gpu_memory_fraction = 0.49
     set_session(tf.Session(config=config))
 
 from ModelsManager import ModelsManager
@@ -179,7 +179,7 @@ def train_single():
 
     model_manager = ModelsManager(results_path)
 
-    dropout_p = 0.4
+    dropout_p = 0.2
 
     model_type = 'conv_2_layer'
     model_id = 'conv_2_layer_07_1_2_348_6_5_new'
@@ -187,7 +187,7 @@ def train_single():
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
                     'lr': 0.001,
-                    'rotation':True,
+                    'rotation':False,
                     'foveation':True,
                     'linear_deformation':True,
                     'conv_dropout_p':dropout_p,
