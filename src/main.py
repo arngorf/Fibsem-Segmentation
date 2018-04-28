@@ -186,10 +186,10 @@ def train_single():
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
-                    'lr': 0.001,
+                    'lr': 0.01,
                     'rotation':True,
-                    'foveation':False,
-                    'linear_deformation':True,
+                    'foveation':True,
+                    'linear_deformation':False,
                     'conv_dropout_p':dropout_p,
                     'dense_dropout_p':dropout_p,
                     }
