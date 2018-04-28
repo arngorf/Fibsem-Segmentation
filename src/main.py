@@ -179,7 +179,7 @@ def train_single():
 
     model_manager = ModelsManager(results_path)
 
-    dropout_p = 0.35
+    dropout_p = 0.4
 
     model_type = 'conv_2_layer'
     model_id = 'conv_2_layer_07_1_2_348_6_5_new'
