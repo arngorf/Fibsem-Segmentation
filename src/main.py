@@ -181,8 +181,8 @@ def train_single():
 
     dropout_p = 0.35
 
-    model_type = 'conv_2_layer'
-    model_id = 'conv_2_layer_07_1_2_348_6_5_new'
+    model_type = 'conv_2_layer_more'
+    model_id = 'conv_2_layer_more_07_1_2_348_6_5_new'
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
@@ -239,7 +239,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5_new')
+    saved_model = model_manager.get_model('conv_2_layer_more_07_1_2_348_6_5_new')
 
     model = saved_model.load_model('best')
 
@@ -297,6 +297,6 @@ if __name__ == '__main__':
     #train_n_time(3)
     #predict_single_image(400)
     train_single()
-    predict_range(250, 251 + 1)#400)
+    #redict_range(250, 251 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()

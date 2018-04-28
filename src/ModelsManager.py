@@ -18,7 +18,8 @@ CUSTOM_OBJECTS = {'GeometricTransformationLayer':GeometricTransformationLayer,
 model_dict = {'micro':micro,
               'mini': mini,
               'midi': midi,
-              'conv_2_layer': conv_2_layer}
+              'conv_2_layer': conv_2_layer,
+              'conv_2_layer_more': conv_2_layer_more}
 
 def topology_is_equal(model_a, model_b):
 
