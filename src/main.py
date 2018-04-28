@@ -179,10 +179,10 @@ def train_single():
 
     model_manager = ModelsManager(results_path)
 
-    dropout_p = 0.0
+    dropout_p = 0.35
 
     model_type = 'conv_2_layer'
-    model_id = 'conv_2_layer_07_1_2_348_6_5_nodrop'
+    model_id = 'conv_2_layer_07_1_2_348_6_5_new'
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
@@ -209,7 +209,7 @@ def train_single():
                            )
 
     iterations_per_epoch = 565000//4
-    max_epochs = 32*4*2
+    max_epochs = 32*4
 
     train_model(dataset,
                 model_class,
@@ -239,7 +239,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5_nodrop')
+    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5_new')
 
     model = saved_model.load_model('best')
 
@@ -280,7 +280,7 @@ def predict_single_image(img_number):
     return output
 
 def predict_range(start_idx, end_idx):
-    save_path = '../prediction_results/07_1_2_348_6_5_nodrop'
+    save_path = '../prediction_results/07_1_2_348_6_5_new'
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
