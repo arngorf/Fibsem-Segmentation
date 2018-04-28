@@ -179,7 +179,7 @@ def train_single():
 
     model_manager = ModelsManager(results_path)
 
-    dropout_p = 0.2
+    dropout_p = 0.35
 
     model_type = 'conv_2_layer'
     model_id = 'conv_2_layer_07_1_2_348_6_5_new'
@@ -187,8 +187,8 @@ def train_single():
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
                     'lr': 0.001,
-                    'rotation':False,
-                    'foveation':True,
+                    'rotation':True,
+                    'foveation':False,
                     'linear_deformation':True,
                     'conv_dropout_p':dropout_p,
                     'dense_dropout_p':dropout_p,
