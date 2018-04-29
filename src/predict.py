@@ -12,7 +12,7 @@ def predict_image(dataset, model, image):
     i = []
     j = []
 
-    for x, jj, ii in dataset.process_unlabeled_image(image):
+    for x, jj, ii, empty_flag in dataset.process_unlabeled_image(image):
 
         x = x.reshape((x.shape[0], x.shape[1], x.shape[2], 1))
         batch.append(x)

@@ -36,16 +36,24 @@ def get_image_stack(cidx, depth):
 
     for idx in range(1,s+1):
 
+        left_idx = cidx - idx
+        left_idx = abs(left_idx)
+
         #left_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
-        left_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx - idx) + '.png'
+        left_path = '/scratch1/xkv467/lausanne_unregistered/image_dir/lausanne_' + str(left_idx) + '.png'
         left.append(np.array(Image.open(left_path), dtype=np.float32))
 
+        right_idx = cidx + idx
+        if right_idx > 1064:
+            how_much_above = right_idx - 1064
+            right_idx = 1064 - how_much_above
+
         #right_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
-        right_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx + idx) + '.png'
+        right_path = '/scratch1/xkv467/lausanne_unregistered/image_dir/lausanne_' + str(right_idx) + '.png'
         right.append(np.array(Image.open(right_path), dtype=np.float32))
 
     #center_path = '/home/dith/Dropbox/Fibsem-Segmentation/data/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
-    center_path = '/scratch1/xkv467/lausanne/image_dir/lausanne_' + str(cidx) + '.png'
+    center_path = '/scratch1/xkv467/lausanne_unregistered/image_dir/lausanne_' + str(cidx) + '.png'
 
     center_img = np.array(Image.open(center_path), dtype=np.float32)
     result = left
@@ -223,7 +231,8 @@ def train_single():
 def predict_single_image(img_number):
 
     #dataset_path = '../data/lausanne'
-    dataset_path = '/scratch1/xkv467/lausanne'
+    #dataset_path = '/scratch1/xkv467/lausanne'
+    dataset_path = '/scratch1/xkv467/lausanne_unregistered'
     #dataset_path = '../data/test_dataset'
     results_path = '../results'
     batch_size = 128
@@ -284,7 +293,7 @@ def predict_range(start_idx, end_idx):
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
-    for idx in range(start_idx, end_idx):
+    for idx in tqdm(range(start_idx, end_idx)):
         output = predict_single_image(idx)
         filename = os.path.join(save_path, 'lausanne_' + str(idx) + '.p')
         pickle.dump(output, open(filename, 'wb'))
@@ -297,6 +306,6 @@ if __name__ == '__main__':
     #train_n_time(3)
     #predict_single_image(400)
     #train_single()
-    predict_range(300, 500 + 1)#400)
+    predict_range(0, 532 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
