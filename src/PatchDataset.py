@@ -463,6 +463,7 @@ class PatchDataset(object):
                           'post_processing_dir',
                           'new_image_probability',
                           'number_of_available_batches',
+                          'predict_only'
                           }
 
         for kwarg in kwargs:
@@ -516,6 +517,17 @@ class PatchDataset(object):
 
             self.number_of_available_batches = 4
 
+        if 'predict_only' in kwargs:
+
+            self.predict_only = kwargs['predict_only']
+
+            if not isinstance(self.predict_only, bool):
+                raise TypeError('predict_only must be of type bool')
+
+        else:
+
+            self.predict_only = False
+
         self._test_segmentations = self._get_image_indices_with_class_list(self._test_params)
 
         self._feature_classes = []
@@ -523,43 +535,45 @@ class PatchDataset(object):
         segmentations, bounds = self._get_image_indices_with_class_list(self._train_params)
         number_of_live_images = 5
 
-        for class_idx in range(self._n_classes):
+        if not predict_only:
 
-            # Sort out feature mappings
-            if img_class_map == None:
-                class_map = [class_idx]
-            else:
-                class_map = img_class_map[class_idx]
+            for class_idx in range(self._n_classes):
 
-            one_hot_encoding = np.zeros((1, self._n_classes), dtype = np.uint8)
-            one_hot_encoding[0, class_idx] = 1
+                # Sort out feature mappings
+                if img_class_map == None:
+                    class_map = [class_idx]
+                else:
+                    class_map = img_class_map[class_idx]
 
-            newFeatureClass = FeatureClassImageQuery(segmentations[class_idx],
-                                                     one_hot_encoding,
-                                                     class_map,
-                                                     feature_shape,
-                                                     number_of_live_images,
-                                                     self._new_image_probability)
+                one_hot_encoding = np.zeros((1, self._n_classes), dtype = np.uint8)
+                one_hot_encoding[0, class_idx] = 1
 
-            self._feature_classes.append(newFeatureClass)
+                newFeatureClass = FeatureClassImageQuery(segmentations[class_idx],
+                                                         one_hot_encoding,
+                                                         class_map,
+                                                         feature_shape,
+                                                         number_of_live_images,
+                                                         self._new_image_probability)
 
-        # Multi-threading data fetching variables
+                self._feature_classes.append(newFeatureClass)
 
-        self.fetch_results_cond = threading.Condition()
-        self.fetch_results = []
-        self._next_class_idx = 0
+            # Multi-threading data fetching variables
 
-        # Mechanics for getting data in multiple threads
+            self.fetch_results_cond = threading.Condition()
+            self.fetch_results = []
+            self._next_class_idx = 0
 
-        self.num_running_threads_lock = threading.Lock()
-        self.num_running_threads = 0
-        self.is_non_full = threading.Event()
-        self.is_non_full.set()
-        self.joinable_threads = []
-        self._extra_batches = []
+            # Mechanics for getting data in multiple threads
 
-        self._threadStarterThread = ThreadStarterThread(self, self._batch_size)
-        self._threadStarterThread.start()
+            self.num_running_threads_lock = threading.Lock()
+            self.num_running_threads = 0
+            self.is_non_full = threading.Event()
+            self.is_non_full.set()
+            self.joinable_threads = []
+            self._extra_batches = []
+
+            self._threadStarterThread = ThreadStarterThread(self, self._batch_size)
+            self._threadStarterThread.start()
 
     @property
     def batch_size(self):
@@ -707,6 +721,9 @@ class PatchDataset(object):
         new_thread.start()
 
     def next_batch(self):
+
+        if self.predict_only:
+            raise ValueError('PatchDataset was created with flag predict_only=True')
 
         queried_data = []
         counts = [0 for i in range(self._n_classes)]
