@@ -14,7 +14,7 @@ import numpy as np
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] ="1"
 
-limit_memory = False
+limit_memory = True
 
 if limit_memory:
     import tensorflow as tf
