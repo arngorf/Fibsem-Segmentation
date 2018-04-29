@@ -239,7 +239,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5')
+    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5_more_reg')
 
     model = saved_model.load_model('best')
 
