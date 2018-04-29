@@ -20,7 +20,7 @@ if limit_memory:
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = 0.49
+    config.gpu_options.per_process_gpu_memory_fraction = 0.48
     set_session(tf.Session(config=config))
 
 from ModelsManager import ModelsManager
@@ -181,8 +181,8 @@ def train_single():
 
     dropout_p = 0.35
 
-    model_type = 'conv_2_layer_more'
-    model_id = 'conv_2_layer_more_07_1_2_348_6_5_new'
+    model_type = 'conv_2_layer'
+    model_id = 'conv_2_layer_07_1_2_348_6_5'
 
     model_params = {'norm_params': norm_params,
                     'output_size': output_size,
@@ -239,7 +239,7 @@ def predict_single_image(img_number):
 
     model_manager = ModelsManager(results_path)
 
-    saved_model = model_manager.get_model('conv_2_layer_more_07_1_2_348_6_5_new')
+    saved_model = model_manager.get_model('conv_2_layer_07_1_2_348_6_5')
 
     model = saved_model.load_model('best')
 
@@ -280,7 +280,7 @@ def predict_single_image(img_number):
     return output
 
 def predict_range(start_idx, end_idx):
-    save_path = '../prediction_results/07_1_2_348_6_5_more'
+    save_path = '../prediction_results/07_1_2_348_6_5_final'
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
@@ -297,6 +297,6 @@ if __name__ == '__main__':
     #train_n_time(3)
     #predict_single_image(400)
     train_single()
-    predict_range(250, 251 + 1)#400)
+    predict_range(100, 300 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
