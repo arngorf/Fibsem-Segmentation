@@ -297,6 +297,6 @@ if __name__ == '__main__':
     #train_n_time(3)
     #predict_single_image(400)
     train_single()
-    #redict_range(250, 251 + 1)#400)
+    predict_range(250, 251 + 1)#400)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
