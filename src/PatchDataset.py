@@ -390,6 +390,7 @@ class PatchDataset(object):
                  '_test_segmentations',
                  '_new_image_probability',
                  'number_of_available_batches',
+                 'predict_only',
                  '_feature_classes',
                  'fetch_results_cond',
                  'fetch_results',
@@ -535,7 +536,7 @@ class PatchDataset(object):
         segmentations, bounds = self._get_image_indices_with_class_list(self._train_params)
         number_of_live_images = 5
 
-        if not predict_only:
+        if not self.predict_only:
 
             for class_idx in range(self._n_classes):
 
