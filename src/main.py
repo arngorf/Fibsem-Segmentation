@@ -280,7 +280,7 @@ def predict_single_image(img_number):
     return output
 
 def predict_range(start_idx, end_idx):
-    save_path = '../prediction_results/07_1_2_348_6_5_new'
+    save_path = '../prediction_results/07_1_2_348_6_5_more'
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
