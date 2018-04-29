@@ -359,7 +359,7 @@ class ModelClass():
                   m.train_acc,
                   m.test_acc,
                   ) for m in self._saved_models_list]
-        print(stats)
+        #print(stats)
         epoch, train_acc, test_acc = zip(*stats)
         return epoch, train_acc, test_acc
 
