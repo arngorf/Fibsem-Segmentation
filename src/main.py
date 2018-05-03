@@ -291,6 +291,7 @@ def predict_single_image(img_number):
 
 def predict_range(start_idx, end_idx):
     save_path = '../prediction_results/07_1_2_348_6_5_final'
+    save_path = '/scratch1/xkv467/07_1_2_348_6_5_final'
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
 
@@ -307,7 +308,9 @@ if __name__ == '__main__':
     #train_n_time(3)
     #predict_single_image(400)
     #train_single()
-    predict_range(0, 532 + 1)
+    #predict_range(0, 532 + 1)
     #predict_range(532, 1064 + 1)
+    predict_range(107, 532 + 1)
+    #predict_range(645, 1064 + 1)
     #time.sleep(10)
     #dropbox_and_preprocessing_effect()
